@@ -118,7 +118,7 @@ hw-lab-companion/
 ├── docs/
 │   ├── ic-reference.md        ← IC pinout cheat sheet
 │   └── images/                ← screenshots
-└── .github/                   ← issue templates, PR template, Pages deploy
+└── .github/                   ← issue templates, PR template, link checker
 ```
 
 Every tool is **one self-contained HTML file**: HTML, CSS and JavaScript together, no build step, no frameworks. The only network request is Google Fonts, and the pages fall back to system fonts when offline.
