@@ -421,8 +421,10 @@ HW.circuit = function(spec, vals){
     pd.text(x2 + 6, g.out[1] + 4.5, lab(o.n), { cls: 'tl' });
     if (live) {
       const v = V[o.src];
-      pd.add('<rect class="vb ' + (v ? 'on' : '') + '" x="' + (x2 + 34) + '" y="' + (g.out[1] - 9) + '" width="18" height="18" rx="3"/>');
-      pd.text(x2 + 43, g.out[1] + 4.5, String(v), { cls: 'vt ' + (v ? 'on' : ''), a: 'middle' });
+      // push the value box past long labels like "A AND B" so it doesn't cover them
+      const len = String(o.n).replace(/'/g, '').length, bx = x2 + (len <= 4 ? 34 : Math.round(16 + len * 7.6));
+      pd.add('<rect class="vb ' + (v ? 'on' : '') + '" x="' + bx + '" y="' + (g.out[1] - 9) + '" width="18" height="18" rx="3"/>');
+      pd.text(bx + 9, g.out[1] + 4.5, String(v), { cls: 'vt ' + (v ? 'on' : ''), a: 'middle' });
     }
     if (o.note) pd.text(x2 + 6, g.out[1] + 18, o.note, { cls: 'tn' });
   });

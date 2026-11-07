@@ -5,7 +5,7 @@
 **A free, open study kit for the Digital Hardware Lab.**
 Exam guide · viva flashcards · interactive 4×3 RAM simulator. All 12 experiments. Runs in any browser.
 
-[![Open the site](https://img.shields.io/badge/▶_Open_the_site-63C88E?style=for-the-badge&labelColor=0D1511)](https://YOUR-USERNAME.github.io/hw-lab-companion/)
+[![Open the site](https://img.shields.io/badge/▶_Open_the_site-63C88E?style=for-the-badge&labelColor=0D1511)](https://fitcoder-shoaib.github.io/hw-lab-companion/)
 [![Experiments](https://img.shields.io/badge/experiments-12-DE9B56?style=for-the-badge&labelColor=0D1511)](#-experiments-covered)
 [![No install](https://img.shields.io/badge/install-none-93A59A?style=for-the-badge&labelColor=0D1511)](#-how-to-use-it)
 [![License: MIT](https://img.shields.io/badge/license-MIT-93A59A?style=for-the-badge&labelColor=0D1511)](LICENSE)
@@ -46,14 +46,14 @@ I made these tools while preparing for my own lab exam, and I'm leaving them her
 
 ## 🚀 How to use it
 
-**Option 1: online (easiest).** Open **https://YOUR-USERNAME.github.io/hw-lab-companion/** and pick a tool.
+**Option 1: online (easiest).** Open **https://fitcoder-shoaib.github.io/hw-lab-companion/** and pick a tool.
 
 **Option 2: offline.** Click the green **Code** button → **Download ZIP**, unzip it, and double-click `index.html`.
 
 **Option 3: clone it.**
 
 ```bash
-git clone https://github.com/YOUR-USERNAME/hw-lab-companion.git
+git clone https://github.com/fitcoder-shoaib/hw-lab-companion.git
 ```
 
 > [!TIP]
@@ -103,7 +103,7 @@ flowchart LR
 - Cover analog electronics, microprocessors or HDL (Verilog/VHDL). Those may come later. See the [roadmap](#-roadmap).
 
 > [!IMPORTANT]
-> This is a student-made study aid. Pin numbers and circuits follow standard TTL datasheets, but **your lab manual and your faculty always have the final word**. If something here disagrees with your manual, trust the manual and [tell us](https://github.com/YOUR-USERNAME/hw-lab-companion/issues/new/choose).
+> This is a student-made study aid. Pin numbers and circuits follow standard TTL datasheets, but **your lab manual and your faculty always have the final word**. If something here disagrees with your manual, trust the manual and [tell us](https://github.com/fitcoder-shoaib/hw-lab-companion/issues/new/choose).
 
 ## 🗂️ Repository layout
 
@@ -139,8 +139,8 @@ Want to build one of these? See below.
 
 Juniors, this is yours now too. Found a wrong pin number, a typo, or a viva question that came up in your exam? Please add it.
 
-- 🐞 **Spotted a mistake?** [Open a "content error" issue](https://github.com/YOUR-USERNAME/hw-lab-companion/issues/new/choose). Takes one minute.
-- 💡 **Have an idea?** [Suggest a feature](https://github.com/YOUR-USERNAME/hw-lab-companion/issues/new/choose).
+- 🐞 **Spotted a mistake?** [Open a "content error" issue](https://github.com/fitcoder-shoaib/hw-lab-companion/issues/new/choose). Takes one minute.
+- 💡 **Have an idea?** [Suggest a feature](https://github.com/fitcoder-shoaib/hw-lab-companion/issues/new/choose).
 - 🛠️ **Want to fix it yourself?** Read [CONTRIBUTING.md](CONTRIBUTING.md). Editing is just opening an HTML file in a text editor.
 
 If this helped you, **leave a ⭐**. It helps the next batch find it.
