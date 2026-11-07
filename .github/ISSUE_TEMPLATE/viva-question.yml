@@ -1,0 +1,22 @@
+name: 🎤 Viva question
+description: Share a viva question you were asked, so juniors can prepare.
+title: "[Viva] Exp XX: "
+labels: ["viva"]
+body:
+  - type: input
+    id: experiment
+    attributes:
+      label: Experiment number and name
+      placeholder: "06 Asynchronous Counter"
+    validations:
+      required: true
+  - type: textarea
+    id: question
+    attributes:
+      label: The question
+    validations:
+      required: true
+  - type: textarea
+    id: answer
+    attributes:
+      label: A good short answer (if you know it)

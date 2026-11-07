@@ -1,0 +1,14 @@
+# OS / editor clutter
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+
+# Lab manual PDFs belong to the department; don't commit them
+*.pdf
+
+# Local scratch
+node_modules/
+*.log

@@ -1,0 +1,17 @@
+name: Check links
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check local links in Markdown and HTML
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: --offline --no-progress --exclude 'issues/new' './**/*.md' './**/*.html'
+          fail: true

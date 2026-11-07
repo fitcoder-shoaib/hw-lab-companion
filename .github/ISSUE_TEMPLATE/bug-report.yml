@@ -1,0 +1,27 @@
+name: 🐞 Bug report
+description: Something doesn't work or looks broken.
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: dropdown
+    id: tool
+    attributes:
+      label: Which page?
+      options:
+        - Home page
+        - Exam Guide
+        - Theory Bench
+        - 4x3 RAM Simulator
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device and browser
+      placeholder: "Android phone, Chrome"

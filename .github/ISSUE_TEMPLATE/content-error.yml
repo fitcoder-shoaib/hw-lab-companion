@@ -1,0 +1,50 @@
+name: 📝 Content error
+description: A wrong pin number, equation, truth table, diagram or explanation.
+title: "[Content] Exp XX: "
+labels: ["content"]
+body:
+  - type: dropdown
+    id: experiment
+    attributes:
+      label: Which experiment?
+      options:
+        - "00 Familiarisation"
+        - "01 Basic & Universal Gates"
+        - "02 Adders & Subtractors"
+        - "03 4-bit Adder / Subtractor"
+        - "04 MUX & DEMUX"
+        - "05 Flip-Flops"
+        - "06 Asynchronous Counter"
+        - "07 Sync Counter & Sequence Generator"
+        - "08 Shift Register, Ring & Johnson"
+        - "09 Ripple Carry Adder"
+        - "10 ALU"
+        - "11 4x3 RAM"
+        - "Digital basics / IC reference / other"
+    validations:
+      required: true
+  - type: dropdown
+    id: tool
+    attributes:
+      label: Where did you see it?
+      options:
+        - Exam Guide
+        - Theory Bench
+        - 4x3 RAM Simulator
+        - README / docs
+    validations:
+      required: true
+  - type: textarea
+    id: wrong
+    attributes:
+      label: What's wrong?
+      description: Quote what it says now.
+    validations:
+      required: true
+  - type: textarea
+    id: right
+    attributes:
+      label: What should it say?
+      description: Mention your source if you can (datasheet, textbook, faculty).
+    validations:
+      required: true

@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>HW Lab Theory Bench</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+html{-webkit-text-size-adjust:100%}body{margin:0}
+
+/* Layout: a lab bench. Left rail = DIP chips (one per experiment), right = datasheet panel with a green trainer-kit board inside. */
+:root{
+  --paper:#EDF1EB; --paper-2:#E1E7DF; --surface:#F7F9F5;
+  --ink:#16211B; --ink-2:#4B5B51; --rule:#C3CEC5; --grid:rgba(31,94,59,.075);
+  --accent:#1F5E3B; --on-accent:#FFFFFF;
+  --copper:#9C5A18; --copper-soft:#EBD6BC;
+  --board:#1B4A32; --board-2:#163D29; --board-line:#2F6E4E; --board-ink:#D9EADF; --board-dim:#93B8A0; --board-copper:#E6A55E;
+  --chip:#1D1F22; --chip-ink:#E8E8E4; --chip-dim:#9A9EA3; --pin:#B7BBC0;
+  --led:#FF3B2F; --led-off:#4A2725; --led-ok:#3FD47A;
+  --warn:#B3261E;
+  --f-display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#0C1510; --paper-2:#132019; --surface:#15241C;
+  --ink:#DCE6DF; --ink-2:#95A89B; --rule:#26382D; --grid:rgba(120,200,150,.05);
+  --accent:#62C78D; --on-accent:#0C1510;
+  --copper:#DE9A55; --copper-soft:#3A2916;
+  --board:#11301F; --board-2:#0D2618; --board-line:#245A3D; --board-ink:#D2E5D8; --board-dim:#86A893; --board-copper:#E6A55E;
+  --chip:#07080A; --chip-ink:#E6E6E2; --chip-dim:#8D9196; --pin:#878B90;
+  --led:#FF4A3D; --led-off:#3A2220; --led-ok:#46DB82; --warn:#FF7A70;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0C1510; --paper-2:#132019; --surface:#15241C;
+  --ink:#DCE6DF; --ink-2:#95A89B; --rule:#26382D; --grid:rgba(120,200,150,.05);
+  --accent:#62C78D; --on-accent:#0C1510;
+  --copper:#DE9A55; --copper-soft:#3A2916;
+  --board:#11301F; --board-2:#0D2618; --board-line:#245A3D; --board-ink:#D2E5D8; --board-dim:#86A893; --board-copper:#E6A55E;
+  --chip:#07080A; --chip-ink:#E6E6E2; --chip-dim:#8D9196; --pin:#878B90;
+  --led:#FF4A3D; --led-off:#3A2220; --led-ok:#46DB82; --warn:#FF7A70;
+  color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px;color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.6}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--copper);outline-offset:2px}
+.wrap{max-width:1300px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:22px 64px}
+.mono{font-family:var(--f-mono)}
+.ov{text-decoration:overline;text-decoration-thickness:1.5px}
+
+/* header */
+.top{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between;border-bottom:2px solid var(--ink);padding-bottom:14px}
+.top h1{font-family:var(--f-display);font-weight:700;font-size:clamp(34px,5vw,52px);line-height:.95;margin:0;text-transform:uppercase;letter-spacing:.01em;text-wrap:balance}
+.top h1 span{color:var(--accent)}
+.silk{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+.top .meta{display:flex;flex-direction:column;gap:2px;text-align:right}
+.progress{display:flex;align-items:center;gap:8px;justify-content:flex-end}
+.progress .bar{width:140px;height:8px;background:var(--paper-2);border:1px solid var(--rule)}
+.progress .bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .3s}
+
+.layout{display:grid;grid-template-columns:250px minmax(0,1fr);gap:28px;margin-top:22px}
+/* chip rail */
+.rail{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);align-self:start;display:flex;flex-direction:column;gap:14px;max-height:calc(100vh - 24px);overflow:auto;padding:8px 6px 8px 2px}
+.rail-label{font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;color:var(--ink-2);text-transform:uppercase;margin:4px 0 -4px}
+.chip{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 8px;align-items:center;width:100%;text-align:left;cursor:pointer;
+  background:radial-gradient(circle at 0 50%,var(--paper) 0 7px,transparent 7.5px),var(--chip);color:var(--chip-ink);
+  border:none;border-radius:3px;padding:10px 12px 10px 18px;margin:5px 0;box-shadow:0 1px 0 rgba(0,0,0,.25)}
+.chip::before,.chip::after{content:"";position:absolute;left:12px;right:12px;height:5px;background:repeating-linear-gradient(90deg,var(--pin) 0 6px,transparent 6px 13px)}
+.chip::before{top:-5px}.chip::after{bottom:-5px}
+.chip .cid{font-family:var(--f-mono);font-size:11px;color:var(--chip-dim);letter-spacing:.08em}
+.chip .cname{grid-column:1;font-family:var(--f-display);font-weight:600;font-size:18px;line-height:1.1;letter-spacing:.02em;text-transform:uppercase}
+.chip .dot{grid-row:1/3;grid-column:2;width:9px;height:9px;border-radius:50%;background:var(--led-off)}
+.chip.done .dot{background:var(--led-ok);box-shadow:0 0 6px var(--led-ok)}
+.chip[aria-current="true"]{outline:2px solid var(--copper);outline-offset:3px}
+.chip[aria-current="true"] .dot{background:var(--led);box-shadow:0 0 8px var(--led)}
+.chip.util{background:radial-gradient(circle at 0 50%,var(--paper) 0 7px,transparent 7.5px),var(--accent);color:var(--on-accent)}
+.chip.util .cid{color:var(--on-accent);opacity:.75}
+
+/* main panel */
+main{min-width:0}
+.exp-eyebrow{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.ictag{font-family:var(--f-mono);font-size:12px;font-weight:500;padding:2px 8px;border:1px solid var(--ink);background:var(--surface)}
+.exp-title{font-family:var(--f-display);font-weight:700;font-size:clamp(30px,4.2vw,46px);line-height:1;margin:10px 0 16px;text-transform:uppercase;text-wrap:balance}
+.controls{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding-block:12px;margin-bottom:24px}
+.tabs{display:inline-flex;border:2px solid var(--ink);border-radius:4px;overflow:hidden;flex-wrap:wrap}
+.tabs button{background:transparent;border:none;padding:8px 14px;cursor:pointer;font-family:var(--f-mono);font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;display:flex;gap:8px;align-items:center}
+.tabs button+button{border-left:2px solid var(--ink)}
+.tabs button .n{font-size:11px;opacity:.6}
+.tabs button[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+.toggles{display:flex;gap:10px;flex-wrap:wrap}
+.tbtn{display:inline-flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--rule);border-radius:4px;padding:6px 10px;cursor:pointer;font-family:var(--f-mono);font-size:12px;letter-spacing:.04em;text-transform:uppercase}
+.tbtn .lamp{width:9px;height:9px;border-radius:50%;background:var(--led-off)}
+.tbtn[aria-pressed="true"] .lamp{background:var(--led-ok);box-shadow:0 0 6px var(--led-ok)}
+
+/* concept */
+.panel{display:flex;flex-direction:column;gap:26px}
+.lead-box{border:2px solid var(--ink);background:var(--surface);padding:18px 20px}
+.lead-box .silk{display:block;margin-bottom:6px;color:var(--copper);font-weight:600}
+.lead-box p{margin:0;font-size:18.5px;line-height:1.55;max-width:68ch}
+h3.sec{font-family:var(--f-display);font-weight:600;font-size:22px;text-transform:uppercase;letter-spacing:.03em;margin:0 0 10px;display:flex;align-items:center;gap:10px}
+h3.sec::after{content:"";flex:1;height:1px;background:var(--rule)}
+.terms{display:grid;grid-template-columns:minmax(120px,190px) minmax(0,1fr);border-top:1px solid var(--rule)}
+.terms dt,.terms dd{margin:0;padding:9px 0;border-bottom:1px solid var(--rule)}
+.terms dt{font-family:var(--f-mono);font-weight:600;font-size:13.5px;color:var(--copper);padding-right:14px}
+.duo{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.note{padding:14px 16px;background:var(--paper-2);border:1px solid var(--rule)}
+.note.hook{background:var(--copper-soft);border:1px dashed var(--copper)}
+.note .silk{display:block;margin-bottom:4px;font-weight:600}
+.note p{margin:0}
+
+/* bench (trainer kit) */
+.bench{background:var(--board);color:var(--board-ink);border:1px solid var(--board-line);border-radius:6px;padding:16px;
+  background-image:linear-gradient(90deg,transparent 0 31px,rgba(255,255,255,.035) 31px 33px,transparent 33px),linear-gradient(transparent 0 31px,rgba(255,255,255,.03) 31px 33px,transparent 33px);background-size:64px 64px}
+.bench-head{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:14px}
+.bench-head .silk{color:var(--board-dim)}
+.modes{display:flex;flex-wrap:wrap;gap:6px}
+.modes button{background:transparent;border:1px solid var(--board-line);color:var(--board-ink);border-radius:3px;padding:4px 10px;cursor:pointer;font-family:var(--f-mono);font-size:12px}
+.modes button[aria-pressed="true"]{background:var(--board-copper);border-color:var(--board-copper);color:#1A1208}
+.bench-body{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:18px}
+.bench-body.single{grid-template-columns:minmax(0,1fr)}
+.zone{background:var(--board-2);border:1px solid var(--board-line);border-radius:4px;padding:12px;min-width:0}
+.zone+.zone{margin-top:12px}
+.zone>.silk{display:block;color:var(--board-dim);font-size:11px;margin-bottom:10px}
+.row{display:flex;flex-wrap:wrap;gap:14px 16px;align-items:flex-end}
+.gap{width:10px}
+.sw{display:flex;flex-direction:column;align-items:center;gap:5px;background:transparent;border:none;cursor:pointer;padding:0;color:var(--board-ink)}
+.lever{width:24px;height:42px;border-radius:4px;background:#0B1A12;border:1px solid var(--board-line);position:relative}
+.lever::after{content:"";position:absolute;left:2px;right:2px;height:18px;bottom:2px;border-radius:3px;background:#C9CDD1;transition:bottom .12s}
+.sw[aria-pressed="true"] .lever{background:#3A0F0C}
+.sw[aria-pressed="true"] .lever::after{bottom:20px;background:#F1F2F3}
+.sw .lab,.out .lab{font-family:var(--f-mono);font-size:12px;font-weight:600}
+.sw .val{font-family:var(--f-mono);font-size:11px;color:var(--board-dim)}
+.out{display:flex;flex-direction:column;align-items:center;gap:5px;min-width:30px}
+.led{width:16px;height:16px;border-radius:50%;background:var(--led-off);box-shadow:inset 0 -2px 3px rgba(0,0,0,.45);transition:background .1s,box-shadow .1s}
+.led.on{background:var(--led);box-shadow:0 0 10px var(--led),0 0 2px #fff inset}
+.led.hl{outline:2px solid var(--board-copper);outline-offset:2px}
+.bus{display:flex;flex-direction:column;gap:5px}
+.bus .leds{display:flex;gap:8px;align-items:flex-end}
+.bus .leds .out .lab{font-size:10px;color:var(--board-dim);font-weight:500}
+.bus .busname{font-family:var(--f-mono);font-size:12px;font-weight:600}
+.readout{font-family:var(--f-mono);font-size:14px;background:#08140D;color:#9CF0B8;border:1px solid var(--board-line);padding:6px 10px;border-radius:3px;font-variant-numeric:tabular-nums}
+.readout .k{color:var(--board-dim);font-size:11px;display:block}
+.msg{font-family:var(--f-mono);font-size:13px;color:var(--board-ink);margin-top:10px;min-height:1.4em}
+.msg.bad{color:#FFB3A8}
+.bench .tt-wrap{max-height:none}
+.bench table.tt{color:var(--board-ink)}
+.bench table.tt th{border-color:var(--board-line);color:var(--board-dim)}
+.bench table.tt td{border-color:var(--board-line)}
+.bench table.tt tbody tr{cursor:pointer}
+.bench table.tt tbody tr:hover td{background:rgba(255,255,255,.05)}
+.bench table.tt tr.cur td{background:var(--board-copper);color:#1A1208}
+.bench table.tt th.o,.bench table.tt td.o{color:inherit}
+.btn{background:var(--board-copper);color:#1A1208;border:none;border-radius:3px;padding:8px 14px;cursor:pointer;font-family:var(--f-mono);font-weight:600;font-size:13px;letter-spacing:.04em}
+.btn.ghost{background:transparent;color:var(--board-ink);border:1px solid var(--board-line)}
+.btn:disabled{opacity:.5;cursor:default}
+.hist{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.hist span{font-family:var(--f-mono);font-size:12px;padding:2px 6px;border:1px solid var(--board-line);border-radius:2px;color:var(--board-dim);font-variant-numeric:tabular-nums}
+.hist span:last-child{color:#1A1208;background:var(--board-copper);border-color:var(--board-copper)}
+.ramgrid{display:grid;grid-template-columns:auto repeat(3,auto);gap:8px 14px;align-items:center;justify-content:start}
+.ramgrid .w{font-family:var(--f-mono);font-size:12px;color:var(--board-dim);padding:2px 6px;border-radius:2px}
+.ramgrid .w.sel{background:var(--board-copper);color:#1A1208}
+
+/* tables */
+.tt-wrap{overflow-x:auto;max-width:100%}
+table.tt{border-collapse:collapse;font-family:var(--f-mono);font-size:13.5px;font-variant-numeric:tabular-nums}
+table.tt th,table.tt td{border:1px solid var(--rule);padding:4px 10px;text-align:center}
+table.tt th{font-weight:600;color:var(--ink-2);background:transparent}
+table.tt th.o,table.tt td.o{color:var(--accent);font-weight:600}
+table.tt td.l,table.tt th.l{text-align:left}
+.tables{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start}
+.tables figure{margin:0}
+.tables figcaption{font-family:var(--f-mono);font-size:12px;color:var(--ink-2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em}
+
+/* exam answer */
+.exam{background:var(--surface);border:1px solid var(--rule);padding:clamp(16px,3vw,30px);display:flex;flex-direction:column;gap:22px}
+.exam .examhead{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;border-bottom:2px solid var(--ink);padding-bottom:8px}
+.exam .examhead b{font-family:var(--f-display);font-size:22px;text-transform:uppercase;letter-spacing:.03em}
+.ans{position:relative;transition:filter .2s}
+.ans h4{font-family:var(--f-mono);font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--copper);margin:0 0 6px;font-weight:600}
+.ans p{margin:0 0 10px;max-width:72ch}
+.ans p:last-child{margin-bottom:0}
+.ans ul{margin:0;padding-left:20px;max-width:72ch}
+.ans li{margin-bottom:4px}
+.eq{font-family:var(--f-mono);font-size:15px;background:var(--paper-2);border:1px solid var(--rule);padding:10px 14px;margin:8px 0 12px;overflow-x:auto;line-height:1.9;max-width:100%}
+.eq b{color:var(--accent);font-weight:600}
+body.selftest .exam .ans:not(.shown){filter:blur(6px);cursor:pointer;user-select:none}
+body.selftest .exam .ans:not(.shown)::after{content:"tap to reveal";position:absolute;top:0;right:0;font-family:var(--f-mono);font-size:11px;background:var(--ink);color:var(--paper);padding:2px 6px;filter:none}
+
+/* points */
+.pts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;border-top:1px solid var(--rule)}
+.pts li{padding:9px 0 9px 26px;border-bottom:1px solid var(--rule);position:relative;max-width:80ch}
+.pts li::before{content:"";position:absolute;left:4px;top:17px;width:10px;height:6px;background:var(--pin);border:1px solid var(--ink-2)}
+.abbr{width:100%;border-collapse:collapse}
+.abbr td{border-bottom:1px solid var(--rule);padding:8px 10px 8px 0;vertical-align:top}
+.abbr td:first-child{font-family:var(--f-mono);font-weight:600;color:var(--copper);white-space:nowrap;width:1%;padding-right:20px}
+.search{width:100%;max-width:420px;padding:10px 12px;border:2px solid var(--ink);background:var(--surface);color:var(--ink);font-family:var(--f-mono);font-size:14px;border-radius:3px}
+
+/* viva cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.card{text-align:left;background:var(--surface);border:1px solid var(--rule);border-radius:4px;padding:14px;cursor:pointer;display:flex;flex-direction:column;gap:8px;min-height:120px}
+.card .q{font-weight:600}
+.card .a{color:var(--ink-2);display:none}
+.card .tag{font-family:var(--f-mono);font-size:11px;color:var(--copper);letter-spacing:.06em;text-transform:uppercase}
+.card .hint{font-family:var(--f-mono);font-size:11px;color:var(--ink-2);margin-top:auto}
+.card[aria-expanded="true"]{border-color:var(--accent)}
+.card[aria-expanded="true"] .a{display:block;color:var(--ink)}
+.card[aria-expanded="true"] .hint{display:none}
+
+@media (max-width:880px){
+  .layout{grid-template-columns:minmax(0,1fr)}
+  .rail{position:static;flex-direction:row;overflow-x:auto;max-height:none;padding:8px 2px 10px;gap:10px}
+  .rail-label{display:none}
+  .chip{flex:0 0 auto;width:178px}
+  .bench-body{grid-template-columns:minmax(0,1fr)}
+  .top .meta{text-align:left}
+  .progress{justify-content:flex-start}
+}
+@media (max-width:520px){
+  .terms{grid-template-columns:minmax(0,1fr)}
+  .terms dt{border-bottom:none;padding-bottom:0}
+  .tabs button{padding:8px 10px;font-size:12px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="silk">Digital Lab · Exam Revision · 11 Experiments</div>
+      <h1>HW Lab <span>Theory Bench</span></h1>
+    </div>
+    <div class="meta">
+      <div class="silk">Pick a chip → Concept → Exam answer → Points</div>
+      <div class="progress"><span class="silk" id="progTxt">0 / 12 revised</span><span class="bar"><i id="progBar"></i></span></div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="rail" id="rail" aria-label="Experiments"></nav>
+    <main id="main"></main>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+/* ---------- helpers ---------- */
+const ov = s => '<span class="ov">'+s+'</span>';
+const A=ov('A'), B=ov('B'), C=ov('C'), Q=ov('Q');
+const CI=ov('C<sub>in</sub>'), BI=ov('B<sub>in</sub>'), QN=ov('Q<sub>n</sub>');
+const LBL={Ci:'C<sub>in</sub>',Co:'C<sub>out</sub>',Bi:'B<sub>in</sub>',Bo:'B<sub>out</sub>',RW:'R/'+ov('W'),EN:'EN',Din:'D<sub>in</sub>'};
+const lab = k => LBL[k] || k.replace(/^([A-Z]+)(\d)$/,'$1<sub>$2</sub>');
+const x = (a,b) => a^b;
+const n = a => 1-a;
+const store = {
+  get(k,d){try{const v=localStorage.getItem('hwbench:'+k);return v===null?d:JSON.parse(v);}catch(e){return d;}},
+  set(k,v){try{localStorage.setItem('hwbench:'+k,JSON.stringify(v));}catch(e){}}
+};
+function tt(ins, outs, caption){
+  const N=ins.length;
+  let h='<figure>'+(caption?'<figcaption>'+caption+'</figcaption>':'')+'<div class="tt-wrap"><table class="tt"><thead><tr>'+ins.map(k=>'<th>'+lab(k)+'</th>').join('')+outs.map(o=>'<th class="o">'+o[0]+'</th>').join('')+'</tr></thead><tbody>';
+  for(let r=0;r<(1<<N);r++){const v={};ins.forEach((k,i)=>v[k]=(r>>(N-1-i))&1);h+='<tr>'+ins.map(k=>'<td>'+v[k]+'</td>').join('')+outs.map(o=>'<td class="o">'+o[1](v)+'</td>').join('')+'</tr>';}
+  return h+'</tbody></table></div></figure>';
+}
+function table(head, rows, caption, outFrom){
+  outFrom = outFrom==null ? head.length : outFrom;
+  return '<figure>'+(caption?'<figcaption>'+caption+'</figcaption>':'')+'<div class="tt-wrap"><table class="tt"><thead><tr>'+head.map((h,i)=>'<th'+(i>=outFrom?' class="o"':'')+'>'+h+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+r.map((c,i)=>'<td'+(i>=outFrom?' class="o"':'')+'>'+c+'</td>').join('')+'</tr>').join('')+'</tbody></table></div></figure>';
+}
+const num = (v,p,N) => {let s=0;for(let i=N-1;i>=0;i--)s=s*2+v[p+i];return s;};
+const toBits = (val,N) => {const b=[];for(let i=N-1;i>=0;i--)b.push((val>>i)&1);return b;};
+const bstr = (val,N) => toBits(val,N).join('');
+const sec = (title, body) => '<div class="ans"><h4>'+title+'</h4>'+body+'</div>';
+
+/* ---------- content ---------- */
+const EXPS = [
+/* ===== 00 ===== */
+{ id:'exp00', no:'00', short:'Familiarisation', title:'Familiarisation of Digital ICs & Trainer Kit', ics:['7408','7432','7404','7400','7402','7486','7410'],
+  lead:'Digital circuits understand only two levels: HIGH (logic 1, about +5 V) and LOW (logic 0, about 0 V). A logic gate takes 0/1 inputs and gives one 0/1 output by a fixed rule. An IC is a small chip that holds several gates. The trainer kit is the bench where you plug in ICs, give inputs with switches and see outputs on LEDs.',
+  terms:[
+    ['Logic gate','A small circuit with one or more binary inputs and one output, decided by a fixed logic rule.'],
+    ['IC','Integrated Circuit: a tiny chip that packs many components (here, several gates) into one package.'],
+    ['AND','Output is 1 only when ALL inputs are 1. Y = A·B'],
+    ['OR','Output is 1 when ANY input is 1. Y = A + B'],
+    ['NOT','Flips the input. 1 becomes 0, 0 becomes 1. Y = '+A],
+    ['NAND','AND followed by NOT. Output is 0 only when all inputs are 1.'],
+    ['NOR','OR followed by NOT. Output is 1 only when all inputs are 0.'],
+    ['XOR','Output is 1 when the inputs are DIFFERENT (odd number of 1s).'],
+    ['TTL','Transistor-Transistor Logic: the IC family of the 74xx chips. Works on 5 V.'],
+    ['DIP','Dual In-line Package: the chip body with two parallel rows of pins that plugs into a breadboard.'],
+    ['Trainer kit','A test bench with breadboard, built-in 5 V supply, input switches, output LEDs and clock.']
+  ],
+  picture:'AND is two switches in series with a bulb: it glows only if both are closed. OR is two switches in parallel: closing either one lights the bulb. NOT is a switch that turns the bulb OFF when pressed.',
+  hook:'AND = all · OR = any · NAND = not all · NOR = none · XOR = different. On a 14-pin IC the last pin (14) is +5 V and the middle-bottom pin (7) is ground.',
+  sim:{type:'comb',modes:[
+    {label:'AND · 7408',inputs:['A','B'],outs:[['Y',v=>v.A&v.B]],note:'IC 7408 · Quad 2-input AND · Y = A·B'},
+    {label:'OR · 7432',inputs:['A','B'],outs:[['Y',v=>v.A|v.B]],note:'IC 7432 · Quad 2-input OR · Y = A + B'},
+    {label:'NOT · 7404',inputs:['A'],outs:[['Y',v=>n(v.A)]],note:'IC 7404 · Hex inverter (6 NOT gates) · Y = '+A},
+    {label:'NAND · 7400',inputs:['A','B'],outs:[['Y',v=>n(v.A&v.B)]],note:'IC 7400 · Quad 2-input NAND · Y = '+ov('A·B')},
+    {label:'NOR · 7402',inputs:['A','B'],outs:[['Y',v=>n(v.A|v.B)]],note:'IC 7402 · Quad 2-input NOR · Y = '+ov('A + B')+' · output is on pin 1'},
+    {label:'XOR · 7486',inputs:['A','B'],outs:[['Y',v=>x(v.A,v.B)]],note:'IC 7486 · Quad 2-input XOR · Y = A ⊕ B'},
+    {label:'3-in NAND · 7410',inputs:['A','B','C'],outs:[['Y',v=>n(v.A&v.B&v.C)]],note:'IC 7410 · Triple 3-input NAND · Y = '+ov('A·B·C')}
+  ]},
+  exam: ()=>
+    sec('1. Aim','<p>To familiarise with the working of digital ICs and the IC trainer kit, and to verify the truth tables of the logic gates.</p>')+
+    sec('2. Theory','<p>In digital electronic circuits, two discrete voltage levels are recognised as two logic levels: logic 1 and logic 0, also called HIGH and LOW. A logic gate has one or more inputs and only one output, and the output depends on the inputs according to a fixed logical rule.</p><p>Logic gates are available as integrated circuits in the <b>TTL, CMOS and ECL</b> families. TTL gates are the most widely used.</p>')+
+    sec('3. Logic gates', table(['Gate','Expression','Working','IC'],[
+      ['AND','Y = A·B','Logical multiplication. Output is HIGH only when all inputs are HIGH.','74LS08'],
+      ['OR','Y = A + B','Logical addition. Output is HIGH if any one input is HIGH.','74LS32'],
+      ['NOT','Y = '+A,'Inversion / complementation. Output is the opposite of the input.','74LS04'],
+      ['NAND','Y = '+ov('A·B'),'AND followed by NOT. Output is LOW only if all inputs are HIGH.','74LS00'],
+      ['NOR','Y = '+ov('A + B'),'OR followed by NOT. Output is LOW if any one input is HIGH.','74LS02'],
+      ['XOR','Y = A ⊕ B = '+A+'B + A'+B,'Output is HIGH if and only if one input is HIGH (inputs differ).','74LS86'],
+      ['3-in NAND','Y = '+ov('A·B·C'),'Output is LOW only when all three inputs are HIGH.','74LS10']
+    ]).replace(/<td>/g,'<td class="l">'))+
+    sec('4. IC details','<p>Digital ICs numbered <b>74LSXX</b> belong to the TTL family. <b>LS stands for Low-power Schottky</b> and XX tells which gate the IC contains. These ICs have <b>14 pins</b>: <b>pin 7 is ground</b> and <b>pin 14 is V<sub>CC</sub></b>. For normal working the supply must be between <b>4.75 V and 5.25 V</b>, so 5 V is the nominal supply voltage. The package used is the <b>Dual In-line Package (DIP)</b>.</p>')+
+    sec('5. IC trainer kit','<p>An IC trainer kit is equipment used to test and implement digital circuits. ICs are fitted in sockets or on the breadboard provided, and the associated circuit is set up on the breadboard. It has a built-in DC voltage source, logic input switches, LED output indicators and clock signals.</p>')+
+    sec('6. Truth table','<div class="tables">'+tt(['A','B'],[['AND',v=>v.A&v.B],['OR',v=>v.A|v.B],['NAND',v=>n(v.A&v.B)],['NOR',v=>n(v.A|v.B)],['XOR',v=>x(v.A,v.B)]])+tt(['A'],[['NOT',v=>n(v.A)]])+'</div>')+
+    sec('7. Result','<p>Familiarised with the digital ICs and the IC trainer kit, and verified the truth tables of all the logic gates.</p>'),
+  points:[
+    'Logic 1 = HIGH ≈ +5 V. Logic 0 = LOW ≈ 0 V.',
+    '74LS series is the TTL family. LS = Low-power Schottky.',
+    '14-pin DIP: pin 7 = GND, pin 14 = V<sub>CC</sub>.',
+    'Supply range 4.75 V to 5.25 V. Nominal 5 V.',
+    '7408 AND · 7432 OR · 7404 NOT · 7400 NAND · 7402 NOR · 7486 XOR · 7410 3-input NAND.',
+    '"Quad 2-input" means four gates with two inputs each in one IC. 7404 is "hex" (six inverters). 7410 is "triple 3-input".',
+    'The 7402 NOR has a different pinout: output on pin 1, inputs on pins 2 and 3.',
+    'NAND and NOR are called universal gates.',
+    'Before the experiment, test ICs with a digital IC tester and check wires for continuity with a multimeter.'
+  ],
+  abbr:[['IC','Integrated Circuit'],['TTL','Transistor-Transistor Logic'],['CMOS','Complementary Metal Oxide Semiconductor'],['ECL','Emitter Coupled Logic'],['LS','Low-power Schottky'],['DIP','Dual In-line Package'],['V<sub>CC</sub>','Collector supply voltage (+5 V pin)'],['GND','Ground (0 V)'],['LED','Light Emitting Diode'],['XOR / EX-OR','Exclusive OR'],['XNOR','Exclusive NOR']]
+},
+/* ===== 01 ===== */
+{ id:'exp01', no:'01', short:'Basic & Universal Gates', title:'Realization of Functions using Basic & Universal Gates', ics:['7408','7432','7404','7400','7402'],
+  lead:'Any Boolean expression can be built by wiring gates together. SOP form uses AND gates first and one OR gate at the output. POS form uses OR gates first and one AND gate at the output. NAND and NOR are "universal gates" because every other gate, and so any expression, can be built using only NANDs or only NORs.',
+  terms:[
+    ['Boolean expression','An equation with 0/1 variables and AND, OR, NOT operations, e.g. Y = AB + '+A+B+'.'],
+    ['SOP','Sum of Products: products (AND terms) added together (OR). Built with AND gates → one OR gate.'],
+    ['POS','Product of Sums: sums (OR terms) multiplied together (AND). Built with OR gates → one AND gate.'],
+    ['Universal gate','A gate that can build every other gate alone. NAND and NOR.'],
+    ["De Morgan's theorem",ov('A·B')+' = '+A+' + '+B+' and '+ov('A + B')+' = '+A+'·'+B+'. Used to convert into NAND/NOR form.'],
+    ['Double complement','Inverting twice gives back the same thing: '+ov(ov('X'))+' = X.'],
+    ['XNOR','Output is 1 when the inputs are EQUAL. AB + '+A+B+' is XNOR.'],
+    ['XOR','Output is 1 when the inputs are DIFFERENT. (A + B)('+A+' + '+B+') is XOR.']
+  ],
+  picture:'A universal gate is like one Lego brick shape you can build every model from. Tie both inputs of a NAND together and you get a NOT. NAND followed by that NOT gives AND. Invert both inputs and then NAND them, and you get OR.',
+  hook:'To go NAND-only: put two bars over the SOP expression, break the lower bar with De Morgan, and you get a NAND of NANDs. For NOR-only do the same with POS form. Y₁ = AB + '+A+B+' = XNOR (1 when equal). Y₂ = (A+B)('+A+'+'+B+') = XOR (1 when different).',
+  sim:{type:'comb',modes:[
+    {label:'Y₁ = AB + A′B′',inputs:['A','B'],outs:[['AB',v=>v.A&v.B],[A+B,v=>n(v.A)&n(v.B)],['Y₁',v=>(v.A&v.B)|(n(v.A)&n(v.B))]],note:'SOP: two AND gates feed one OR gate. Y₁ is 1 when A and B are equal (XNOR).'},
+    {label:'Y₂ = (A+B)(A′+B′)',inputs:['A','B'],outs:[['A+B',v=>v.A|v.B],[A+'+'+B,v=>n(v.A)|n(v.B)],['Y₂',v=>(v.A|v.B)&(n(v.A)|n(v.B))]],note:'POS: two OR gates feed one AND gate. Y₂ is 1 when A and B differ (XOR).'},
+    {label:'NAND → NOT/AND/OR',inputs:['A','B'],outs:[['NOT A',v=>n(v.A&v.A)],['AND',v=>n(n(v.A&v.B))],['OR',v=>n(n(v.A)&n(v.B))]],note:'NOT = NAND with inputs tied. AND = NAND + NOT. OR = NAND of inverted inputs.'},
+    {label:'NOR → NOT/OR/AND',inputs:['A','B'],outs:[['NOT A',v=>n(v.A|v.A)],['OR',v=>n(n(v.A|v.B))],['AND',v=>n(n(v.A)|n(v.B))]],note:'NOT = NOR with inputs tied. OR = NOR + NOT. AND = NOR of inverted inputs.'}
+  ]},
+  exam: ()=>
+    sec('1. Aim','<p>To realise the following Boolean expressions using basic gates and universal gates:</p><div class="eq">Y₁ = AB + '+A+B+'<br>Y₂ = (A + B)('+A+' + '+B+')</div>')+
+    sec('2. Theory','<p>Logic gates are the basic building blocks of digital electronic circuits. Any Boolean function can be represented by interconnecting several logic gates, that is, by connecting one gate\'s output to another gate\'s input, using AND, OR and NOT gates.</p><p><b>SOP (Sum of Products)</b> form is implemented with AND gates at the input side and, since the output is the sum of all product terms, an OR gate at the output side.</p><p><b>POS (Product of Sums)</b> form is implemented with OR gates at the input side and, since the output is the product of all sum terms, an AND gate at the output side.</p><p><b>NAND and NOR gates are known as universal gates</b> because any basic logic gate or Boolean expression can be realised using NAND gates alone or NOR gates alone.</p>')+
+    sec("3. De Morgan's theorems",'<div class="eq">'+ov('A·B')+' = '+A+' + '+B+'<br>'+ov('A + B')+' = '+A+' · '+B+'</div>')+
+    sec('4. Realization of Y₁ = AB + '+A+B,
+      '<p><b>Basic gates:</b> 2 NOT, 2 AND and 1 OR gate.</p>'+
+      '<p><b>NAND only:</b> take double complement and apply De Morgan.</p><div class="eq">Y₁ = '+ov(ov('AB + '+A+B))+' = '+ov(ov('AB')+' · '+ov(A+B))+'</div><p>A′ and B′ are made with NAND inverters, then two NANDs and one output NAND (5 NAND gates).</p>'+
+      '<p><b>NOR only:</b> since AB = '+ov(A+' + '+B)+' and '+A+B+' = '+ov('A + B')+',</p><div class="eq">Y₁ = '+ov(A+' + '+B)+' + '+ov('A + B')+'</div><p>A′ and B′ from NOR inverters, two NORs, one NOR and a final NOR inverter (6 NOR gates).</p>')+
+    sec('5. Realization of Y₂ = (A + B)('+A+' + '+B+')',
+      '<p><b>Basic gates:</b> 2 NOT, 2 OR and 1 AND gate.</p>'+
+      '<p><b>NAND only:</b></p><div class="eq">Y₂ = '+ov(ov('(A + B)('+A+' + '+B+')'))+' = '+ov(A+B+' + AB')+' = '+ov(A+B)+' · '+ov('AB')+'</div><p>Two NANDs, then a NAND and a NAND inverter (with input inverters: 6 NAND gates).</p>'+
+      '<p><b>NOR only:</b></p><div class="eq">Y₂ = '+ov(ov('A + B')+' + '+ov(A+' + '+B))+'</div><p>A NOR of two NORs (with input inverters: 5 NOR gates).</p>')+
+    sec('6. Truth tables','<div class="tables">'+tt(['A','B'],[['Y₁',v=>(v.A&v.B)|(n(v.A)&n(v.B))]],'Y₁ = AB + A′B′')+tt(['A','B'],[['Y₂',v=>(v.A|v.B)&(n(v.A)|n(v.B))]],'Y₂ = (A+B)(A′+B′)')+'</div>')+
+    sec('7. Result','<p>Realised the given Boolean expressions using basic gates and universal gates (NAND only and NOR only) and verified their truth tables.</p>'),
+  points:[
+    'SOP → AND gates first, OR gate at output. POS → OR gates first, AND gate at output.',
+    'NAND and NOR are universal gates.',
+    'NOT from NAND: tie both inputs together. Same for NOR.',
+    'SOP converts naturally to NAND-NAND. POS converts naturally to NOR-NOR.',
+    'AB + A′B′ is the XNOR function (equivalence). (A+B)(A′+B′) is the XOR function.',
+    "De Morgan: break the bar, change the sign (· ↔ +).",
+    'ICs used: 7408, 7432, 7404, 7400, 7402. Pin 14 = +5 V, pin 7 = GND.'
+  ],
+  abbr:[['SOP','Sum of Products'],['POS','Product of Sums'],['NAND','NOT-AND'],['NOR','NOT-OR'],['XNOR','Exclusive NOR (equivalence gate)']]
+},
+/* ===== 02 ===== */
+{ id:'exp02', no:'02', short:'Adders & Subtractors', title:'Half Adder, Full Adder, Half Subtractor & Full Subtractor', ics:['7486','7400','7408','7432','7404'],
+  lead:'These circuits do binary arithmetic one column at a time. A half adder adds 2 bits and gives Sum and Carry. A full adder adds 3 bits (A, B and the carry coming in from the previous column). A half subtractor subtracts one bit from another and gives Difference and Borrow. A full subtractor also takes the borrow from the previous column.',
+  terms:[
+    ['Half adder','Adds two 1-bit numbers. 2 inputs (A, B), 2 outputs (Sum, Carry).'],
+    ['Full adder','Adds three bits: A, B and carry-in. 2 outputs (Sum, Carry-out).'],
+    ['Half subtractor','Subtracts B from A. 2 inputs, 2 outputs (Difference, Borrow).'],
+    ['Full subtractor','Subtracts B and the previous borrow from A. 3 inputs, 2 outputs (Difference, Borrow-out).'],
+    ['Minuend','The number you subtract FROM (A).'],
+    ['Subtrahend','The number being subtracted (B).'],
+    ['Carry','The extra 1 sent to the next column when the sum is 2 or more.'],
+    ['Borrow','The 1 taken from the next column when you do 0 − 1.']
+  ],
+  picture:'Think of adding by hand: 0+0 = 0, 0+1 = 1, 1+1 = 10 (write 0, carry 1). The rightmost column has no carry coming in, so a half adder is enough. Every other column must also add the carry from its right, so it needs a full adder. Subtraction is the same, with borrow instead of carry: 0 − 1 = 1, borrow 1.',
+  hook:'Sum and Difference are BOTH XOR. Only the second output changes: Carry = AB, Borrow = '+A+'B (note the bar on A). Full adder = 2 half adders + 1 OR gate. Full subtractor = 2 half subtractors + 1 OR gate.',
+  sim:{type:'comb',modes:[
+    {label:'Half adder',inputs:['A','B'],outs:[['S',v=>x(v.A,v.B)],['C',v=>v.A&v.B]],note:'S = A ⊕ B · C = AB'},
+    {label:'Full adder',inputs:['A','B','Ci'],outs:[['S',v=>v.A^v.B^v.Ci],['C<sub>out</sub>',v=>((v.A^v.B)&v.Ci)|(v.A&v.B)]],note:'S = A ⊕ B ⊕ C<sub>in</sub> · C<sub>out</sub> = (A ⊕ B)C<sub>in</sub> + AB'},
+    {label:'Half subtractor',inputs:['A','B'],outs:[['D',v=>x(v.A,v.B)],['B<sub>out</sub>',v=>n(v.A)&v.B]],note:'D = A ⊕ B · B<sub>out</sub> = '+A+'B'},
+    {label:'Full subtractor',inputs:['A','B','Bi'],outs:[['D',v=>v.A^v.B^v.Bi],['B<sub>out</sub>',v=>(n(v.A^v.B)&v.Bi)|(n(v.A)&v.B)]],note:'D = A ⊕ B ⊕ B<sub>in</sub> · B<sub>out</sub> = '+ov('A ⊕ B')+'B<sub>in</sub> + '+A+'B'}
+  ]},
+  exam: ()=>
+    sec('1. Aim','<p>To realise half adder, full adder, half subtractor and full subtractor (i) using EX-OR and NAND gates and (ii) using NAND gates alone.</p>')+
+    sec('2. Half adder','<p>A half adder adds two bits. It has two inputs, A and B (two 1-bit numbers), and two outputs: Sum (S) and Carry (C).</p><div class="eq">S = '+A+'B + A'+B+' = <b>A ⊕ B</b><br>C = <b>AB</b></div>'+'<div class="tables">'+tt(['A','B'],[['S',v=>x(v.A,v.B)],['C',v=>v.A&v.B]])+'</div>')+
+    sec('3. Full adder','<p>A full adder is used when more than 2 bits are to be added. Addition starts at the least significant bit, where a half adder is enough. Higher bits must also add the carry from the previous bit, so a full adder with 3 inputs (A, B, C<sub>in</sub>) and 2 outputs (Sum and Carry) is used.</p><div class="eq">S = '+A+B+'C<sub>in</sub> + '+A+'B'+CI+' + A'+B+CI+' + ABC<sub>in</sub> = <b>A ⊕ B ⊕ C<sub>in</sub></b><br>C<sub>out</sub> = '+A+'BC<sub>in</sub> + A'+B+'C<sub>in</sub> + AB'+CI+' + ABC<sub>in</sub> = <b>(A ⊕ B)C<sub>in</sub> + AB</b></div><div class="tables">'+tt(['A','B','Ci'],[['S',v=>v.A^v.B^v.Ci],['C<sub>out</sub>',v=>((v.A^v.B)&v.Ci)|(v.A&v.B)]])+'</div>')+
+    sec('4. Half subtractor','<p>A half subtractor subtracts one bit from another. It has two inputs: A (minuend) and B (subtrahend), and two outputs: Difference (D) and Borrow (B<sub>out</sub>).</p><div class="eq">D = '+A+'B + A'+B+' = <b>A ⊕ B</b><br>B<sub>out</sub> = <b>'+A+'B</b></div><div class="tables">'+tt(['A','B'],[['D',v=>x(v.A,v.B)],['B<sub>out</sub>',v=>n(v.A)&v.B]])+'</div>')+
+    sec('5. Full subtractor','<p>A full subtractor has 3 inputs: minuend (A), subtrahend (B) and previous borrow (B<sub>in</sub>), and 2 outputs: Difference and Borrow.</p><div class="eq">D = '+A+B+'B<sub>in</sub> + '+A+'B'+BI+' + A'+B+BI+' + ABB<sub>in</sub> = <b>A ⊕ B ⊕ B<sub>in</sub></b><br>B<sub>out</sub> = '+A+B+'B<sub>in</sub> + '+A+'B'+BI+' + '+A+'BB<sub>in</sub> + ABB<sub>in</sub> = <b>'+ov('A ⊕ B')+'B<sub>in</sub> + '+A+'B</b></div><div class="tables">'+tt(['A','B','Bi'],[['D',v=>v.A^v.B^v.Bi],['B<sub>out</sub>',v=>(n(v.A^v.B)&v.Bi)|(n(v.A)&v.B)]])+'</div>')+
+    sec('6. Realization','<ul><li><b>Using XOR & NAND:</b> XOR gates (7486) give S / D. NAND gates (7400) give carry / borrow (AB = NAND followed by NAND inverter).</li><li><b>Using NAND only:</b> half adder needs 5 NAND gates (4 for XOR, 1 for carry). Full adder needs 9 NAND gates.</li><li>A full adder can be built from 2 half adders and an OR gate. A full subtractor from 2 half subtractors and an OR gate.</li></ul>')+
+    sec('7. Result','<p>Realised half adder, full adder, half subtractor and full subtractor using basic gates and universal gates, and verified their truth tables.</p>'),
+  points:[
+    'Half adder: S = A ⊕ B, C = AB.',
+    'Full adder: S = A ⊕ B ⊕ C<sub>in</sub>, C<sub>out</sub> = (A ⊕ B)C<sub>in</sub> + AB (also = AB + BC<sub>in</sub> + AC<sub>in</sub>).',
+    'Half subtractor: D = A ⊕ B, B<sub>out</sub> = '+A+'B.',
+    'Full subtractor: D = A ⊕ B ⊕ B<sub>in</sub>, B<sub>out</sub> = '+ov('A ⊕ B')+'B<sub>in</sub> + '+A+'B.',
+    'Why "half" adder: it cannot accept a carry from a previous stage.',
+    'Full adder = 2 half adders + 1 OR gate.',
+    'NAND-only half adder = 5 gates. NAND-only full adder = 9 gates.',
+    'Pin 14 = +5 V, pin 7 = GND on all these ICs.'
+  ],
+  abbr:[['HA','Half Adder'],['FA','Full Adder'],['HS','Half Subtractor'],['FS','Full Subtractor'],['S','Sum'],['C / C<sub>out</sub>','Carry / Carry out'],['C<sub>in</sub>','Carry in (from previous stage)'],['D','Difference'],['B<sub>out</sub>','Borrow out'],['B<sub>in</sub>','Borrow in'],['LSB','Least Significant Bit'],['MSB','Most Significant Bit']]
+},
+/* ===== 03 ===== */
+{ id:'exp03', no:'03', short:'4-bit Adder / Subtractor', title:'Four-bit Adder / Subtractor using IC 7483', ics:['7483','7486'],
+  lead:'One circuit does both addition and subtraction of 4-bit numbers. The IC 7483 is a 4-bit adder. XOR gates in front of the B inputs act as controlled inverters. A mode input M chooses the job: M = 0 adds (A + B), M = 1 subtracts (A − B) by adding the 2\'s complement of B.',
+  terms:[
+    ["1's complement",'Flip every bit. 0101 → 1010.'],
+    ["2's complement","1's complement + 1. Represents a negative number. A − B = A + (2's complement of B)."],
+    ['Mode control (M)','M = 0 → addition, M = 1 → subtraction. M also goes to C<sub>in</sub> to add the "+1".'],
+    ['XOR as inverter','B ⊕ 0 = B (passes) and B ⊕ 1 = '+B+' (inverts). So M decides whether B is inverted.'],
+    ['IC 7483','A 4-bit binary full adder IC with carry in and carry out (16 pins).'],
+    ['End carry','The 5th-bit carry. In subtraction: carry 1 → answer positive, carry 0 → answer negative.']
+  ],
+  picture:'Subtraction is just addition in disguise: 7 − 3 = 7 + (−3). In binary, −3 is the 2\'s complement of 3 (flip the bits, add 1). XOR gates flip the bits when M = 1, and M itself is fed as the carry-in to add that 1. So a single adder chip can do both jobs.',
+  hook:'M = 0 → Add. M = 1 → Minus. After subtracting: carry 1 = positive (drop the carry). Carry 0 = negative and in 2\'s complement form, so the second 7486 + 7483 stage complements it again to get the true magnitude.',
+  sim:{type:'comb',modes:[
+    {label:'Adder / Subtractor',inputs:['A3','A2','A1','A0','|','B3','B2','B1','B0','|','M'],outs:[
+      ['B ⊕ M',v=>({bits:toBits(num(v,'B',4)^(v.M?15:0),4),names:['3','2','1','0']})],
+      ['Stage-1 sum',v=>{const s=num(v,'A',4)+(num(v,'B',4)^(v.M?15:0))+v.M;return {bits:toBits(s&15,4),names:['S3','S2','S1','S0']};}],
+      ['C<sub>out</sub>',v=>{const s=num(v,'A',4)+(num(v,'B',4)^(v.M?15:0))+v.M;return s>>4;}],
+      ['Result',v=>{const a=num(v,'A',4),b=num(v,'B',4);if(!v.M)return {text:a+' + '+b+' = '+(a+b)+'   ('+(a+b>15?'1 ':'')+bstr(a+b&15,4)+')'};const s=a+(b^15)+1,c=s>>4,raw=s&15;return c?{text:a+' − '+b+' = '+raw+'   carry 1 → positive'}:{text:a+' − '+b+' = −'+((~raw+1)&15)+'   carry 0 → negative, re-complemented'};}]
+    ],note:'Set M = 1 to subtract. Try A = 0011, B = 0111 to see a negative answer.'}
+  ]},
+  exam: ()=>
+    sec('1. Aim','<p>To design and set up a 4-bit adder / subtractor using IC 7483 and verify the outputs.</p>')+
+    sec('2. Theory','<p>A and B are the two 4-bit inputs and C<sub>in</sub> is the input carry. S<sub>3</sub> S<sub>2</sub> S<sub>1</sub> S<sub>0</sub> gives the output. By changing the mode input M, the circuit is converted into an adder or a subtractor. The bits of B pass through XOR gates (IC 7486) whose other input is M. The IC 7483 in the second stage is used to convert the 2\'s complement output obtained during subtraction into binary.</p>')+
+    sec('3. Addition (M = 0)','<p>A LOW is applied to M. Since B ⊕ 0 = B, the B inputs appear unchanged at the output of the 7486 and are applied to the 7483 adder. M is the carry input of the first adder, so C<sub>in</sub> = 0 and the output is A + B.</p>')+
+    sec('4. Subtraction (M = 1)','<p>Subtraction takes place in 2\'s complement form. M is made HIGH, so the 7486 gives the 1\'s complement of B (B ⊕ 1 = '+B+'). This is added to A in the first 7483 along with the input carry, which is HIGH. Thus the 2\'s complement of B is added to A.</p><ul><li>If there is an <b>output carry</b>, the result is positive and the output of the first 7483 comes out of the second 7483 unchanged.</li><li>If there is <b>no output carry</b>, the difference is negative and in 2\'s complement form. The second 7486 takes its 1\'s complement and the second 7483 adds 1 to give the binary magnitude.</li></ul><div class="eq">Example: 0111 − 0011 → 0111 + 1100 + 1 = <b>1</b> 0100 → carry 1, answer +0100 (4)<br>Example: 0011 − 0111 → 0011 + 1000 + 1 = <b>0</b> 1100 → no carry, 2\'s complement of 1100 = 0100, answer −4</div>')+
+    sec('5. IC 7483 pin details',table(['Pin','Signal','Pin','Signal'],[['1','A3','9','S0'],['2','S2','10','A0'],['3','A2','11','B0'],['4','B2','12','GND'],['5','V<sub>CC</sub>','13','C<sub>in</sub>'],['6','S1','14','C<sub>out</sub>'],['7','B1','15','S3'],['8','A1','16','B3']]))+
+    sec('6. Result','<p>Set up a 4-bit adder / subtractor using IC 7483 and verified its output for both addition and subtraction.</p>'),
+  points:[
+    'IC 7483 = 4-bit binary full adder, 16 pins. <b>V<sub>CC</sub> = pin 5, GND = pin 12</b> (not 14 and 7).',
+    'C<sub>in</sub> = pin 13, C<sub>out</sub> = pin 14.',
+    'IC 7486 (XOR) works as a controlled inverter: B ⊕ M.',
+    'M = 0 → add. M = 1 → subtract (M also gives the +1 through C<sub>in</sub>).',
+    "Subtraction uses 2's complement: A − B = A + B′ + 1.",
+    'Carry 1 after subtraction → positive result, ignore the carry.',
+    "Carry 0 → negative result in 2's complement; second stage converts it to magnitude.",
+    'Test stage 1 before wiring stage 2.'
+  ],
+  abbr:[['M','Mode control input'],["1's comp","1's complement (invert all bits)"],["2's comp","2's complement (1's complement + 1)"],['C<sub>in</sub> / C<sub>out</sub>','Carry in / Carry out'],['S<sub>0</sub>–S<sub>3</sub>','Sum outputs']]
+},
+/* ===== 04 ===== */
+{ id:'exp04', no:'04', short:'MUX & DEMUX', title:'Combinational Circuits using MUX & DEMUX ICs', ics:['74151','74154'],
+  lead:'A multiplexer (MUX) has many inputs and one output. Select lines choose which input reaches the output. A demultiplexer (DEMUX) does the opposite: one input is sent to one of many outputs, chosen by the select lines. A decoder is a DEMUX without the data input. A MUX can also implement any logic function directly from its truth table.',
+  terms:[
+    ['Multiplexer (MUX)','Data selector: many inputs → one output. Select lines pick the input.'],
+    ['Select lines','Control inputs that choose the line. For n inputs you need m select lines, where 2<sup>m</sup> = n.'],
+    ['Strobe / Enable','Turns the chip ON or OFF. Active LOW: the chip works when this pin is 0.'],
+    ['Demultiplexer (DEMUX)','Data distributor: one input → one of many outputs.'],
+    ['Decoder','n inputs → 2<sup>n</sup> outputs; the input code activates exactly one output. Like a DEMUX with no data input.'],
+    ['Minterm','A row of the truth table where the output is 1, e.g. 011 = '+A+'BC.'],
+    ['IC 74151','8-to-1 multiplexer.'],
+    ['IC 74154','1-to-16 demultiplexer / 4-to-16 decoder.']
+  ],
+  picture:'A MUX is like a rotary selector switch on a stereo: many sources (radio, CD, phone), one speaker, and the knob (select lines) decides which one you hear. A DEMUX is a railway junction sending one train to one of many tracks.',
+  hook:'MUX = many → one. DEMUX = one → many. 2<sup>m</sup> = n: 8:1 MUX needs 3 select lines, 16:1 needs 4. To make a function: put 1 on the data lines of the minterms, 0 on the rest.',
+  sim:{type:'comb',modes:[
+    {label:'8:1 MUX · f = Σm(0,3,5,7)',inputs:['A','B','C'],outs:[
+      ['D lines',v=>{const d=[1,0,0,1,0,1,0,1];return {bits:d,names:['D0','D1','D2','D3','D4','D5','D6','D7'],hl:v.A*4+v.B*2+v.C};}],
+      ['Selected',v=>({text:'ABC = '+v.A+v.B+v.C+' → D'+(v.A*4+v.B*2+v.C)})],
+      ['Y = f',v=>[1,0,0,1,0,1,0,1][v.A*4+v.B*2+v.C]],
+      ['W = '+ov('Y'),v=>1-[1,0,0,1,0,1,0,1][v.A*4+v.B*2+v.C]]
+    ],note:'74151 with D0, D3, D5, D7 tied to logic 1 and the rest to 0. Y and W are complementary outputs.'},
+    {label:'1:4 DEMUX',inputs:['D','|','S1','S0'],outs:[['Outputs',v=>{const i=v.S1*2+v.S0;return {bits:[0,1,2,3].map(k=>k===i?v.D:0),names:['Y0','Y1','Y2','Y3'],hl:i};}]],note:'The data input D appears only at the output picked by S1 S0. 74154 does the same with 16 outputs and 4 select lines.'},
+    {label:'2:4 Decoder',inputs:['EN','|','S1','S0'],outs:[['Outputs',v=>{const i=v.S1*2+v.S0;return {bits:[0,1,2,3].map(k=>(k===i&&v.EN)?1:0),names:['Y0','Y1','Y2','Y3'],hl:v.EN?i:-1};}]],note:'With EN = 1 exactly one output goes HIGH. (The 74154 used as a decoder has active-LOW outputs: the selected one goes 0.)'}
+  ]},
+  exam: ()=>
+    sec('1. Aim','<p>(i) To study various multiplexer and demultiplexer ICs. (ii) To study combinational logic design using multiplexer / demultiplexer ICs.</p>')+
+    sec('2. Multiplexer','<p>A multiplexer is a device that allows digital information from several sources to be routed onto a single line for transmission to a single common destination. It has several input lines, a single output line and a set of data select inputs that switch the data on any one of the inputs to the output. To select one out of n inputs, m select inputs are needed, where <b>2<sup>m</sup> = n</b>.</p><p><b>IC 74151</b> is an 8-line to 1-line multiplexer. It has three select inputs (A, B, C), data inputs D<sub>0</sub> to D<sub>7</sub> and an active-LOW strobe input. The 3-bit binary number on the select inputs decides which data input is directed to the output. The strobe input activates or deactivates the chip. The outputs Y and W are complementary.</p>')+
+    sec('3. Demultiplexer','<p>A demultiplexer performs the reverse operation of a multiplexer. It accepts a single input and distributes it over several output lines according to the binary code on the data select lines.</p><p><b>IC 74154</b> is a 1-to-16 demultiplexer. It has a data input D, 16 outputs Y<sub>0</sub> to Y<sub>15</sub>, an active-LOW strobe input and data select inputs A, B, C, D that decide at which output the data appears.</p>')+
+    sec('4. Decoder','<p>A decoder is similar to a demultiplexer, except that it has no data input. One of the outputs is activated by the select lines. The 74154 can be used as a 4-to-16 decoder by grounding the data input and the strobe input. Since the data input is grounded, the outputs are active LOW.</p>')+
+    sec('5. Realization of functions using MUX','<p>An 8-to-1 multiplexer can implement any three-variable logic function, and a 16-to-1 multiplexer any four-variable function, without any additional gates. The variables are connected to the select lines; logic 1 is applied to the data inputs of the minterms and logic 0 to the rest.</p><div class="eq">f(A,B,C) = '+A+B+C+' + '+A+'BC + A'+B+'C + ABC = Σm(0, 3, 5, 7)<br>→ apply logic 1 to <b>D<sub>0</sub>, D<sub>3</sub>, D<sub>5</sub>, D<sub>7</sub></b> and logic 0 to D<sub>1</sub>, D<sub>2</sub>, D<sub>4</sub>, D<sub>6</sub></div>'+'<div class="tables">'+tt(['A','B','C'],[['f',v=>[1,0,0,1,0,1,0,1][v.A*4+v.B*2+v.C]]])+'</div>')+
+    sec('6. Result','<p>Studied various multiplexer and demultiplexer ICs and realised combinational logic functions using multiplexer / demultiplexer ICs.</p>'),
+  points:[
+    'MUX = data selector (many → one). DEMUX = data distributor (one → many).',
+    '2<sup>m</sup> = n: m select lines for n inputs.',
+    '74151 = 8:1 MUX, 16 pins, 3 select lines, active-LOW strobe, complementary outputs Y and W.',
+    '74154 = 1:16 DEMUX or 4:16 decoder, 24 pins, active-LOW outputs.',
+    'Decoder = DEMUX without the data input.',
+    'An 8:1 MUX realises any 3-variable function, a 16:1 MUX any 4-variable function, with no extra gates.',
+    'Active LOW means the pin works when it is 0 (shown with a bar or bubble).'
+  ],
+  abbr:[['MUX','Multiplexer'],['DEMUX','Demultiplexer'],['EN / G','Enable / Strobe input'],['S<sub>0</sub>, S<sub>1</sub>…','Select lines'],['Σm','Sum of minterms'],['Y / W','True and complement outputs of 74151']]
+},
+/* ===== 05 ===== */
+{ id:'exp05', no:'05', short:'Flip-Flops', title:'Implementation of Flip-Flops (SR, JK, D, T, Master-Slave)', ics:['7476','7473','7474','7400'],
+  lead:'A flip-flop is a 1-bit memory. Unlike a gate, it remembers its output after the input is removed. It has two stable states (SET = 1 and RESET = 0) and two complementary outputs Q and '+Q+'. A clock pulse decides WHEN it can change. SR, JK, D and T flip-flops differ only in how their inputs decide the next state.',
+  terms:[
+    ['Flip-flop','A basic memory element that stores 1 bit. It is a bistable multivibrator.'],
+    ['Bistable','Has two stable states and stays in either one until told to change.'],
+    ['Clock (CLK)','A train of pulses. The flip-flop can change state only when the clock pulse arrives.'],
+    ['Q<sub>n</sub> / Q<sub>n+1</sub>','Present state (before the clock pulse) / next state (after the pulse).'],
+    ['SR flip-flop','S = 1 sets Q to 1, R = 1 resets Q to 0. S = R = 1 is not allowed.'],
+    ['JK flip-flop','Like SR, but J = K = 1 makes the output toggle instead of being invalid.'],
+    ['D flip-flop','Output copies D at the clock pulse, i.e. D delayed by one pulse.'],
+    ['T flip-flop','T = 1: output toggles on each clock pulse. T = 0: no change.'],
+    ['Preset / Clear','Direct inputs that force Q = 1 (preset) or Q = 0 (clear) regardless of the clock.'],
+    ['Race-around','In a JK flip-flop with J = K = 1, the output toggles many times during one long clock pulse, so the final state is unknown.'],
+    ['Master-slave','Two flip-flops in cascade: master works on the clock, slave on the inverted clock. Removes race-around.']
+  ],
+  picture:'A gate is like a doorbell: it rings only while you hold the button. A flip-flop is like a light switch: flick it and it stays where you left it. The clock is a teacher saying "now": inputs are only read at that moment.',
+  hook:'Next state rules: SR → 00 hold, 01 reset, 10 set, 11 ✕. JK → same, but 11 toggles. D → copy. T → 1 toggles. JK with J = K tied together = T. JK with K = '+ov('J')+' = D.',
+  sim:{type:'seq',modes:[
+    {label:'SR',inputs:['S','R'],bits:['Q'],comp:true,init:()=>({Q:0}),next:(s,v)=>{if(v.S&&v.R)return {s:Object.assign({},s,{bad:1}),msg:'S = R = 1 → NOT ALLOWED (invalid state)',bad:true};return {s:{Q:v.S?1:v.R?0:s.Q},msg:v.S?'S=1 → SET (Q=1)':v.R?'R=1 → RESET (Q=0)':'S=R=0 → no change'};}},
+    {label:'JK',inputs:['J','K'],bits:['Q'],comp:true,init:()=>({Q:0}),next:(s,v)=>({s:{Q:v.J&&v.K?1-s.Q:v.J?1:v.K?0:s.Q},msg:v.J&&v.K?'J=K=1 → TOGGLE':v.J?'J=1 → SET':v.K?'K=1 → RESET':'J=K=0 → no change'})},
+    {label:'D',inputs:['D'],bits:['Q'],comp:true,init:()=>({Q:0}),next:(s,v)=>({s:{Q:v.D},msg:'Q copies D = '+v.D})},
+    {label:'T',inputs:['T'],bits:['Q'],comp:true,init:()=>({Q:0}),next:(s,v)=>({s:{Q:v.T?1-s.Q:s.Q},msg:v.T?'T=1 → TOGGLE':'T=0 → no change'})}
+  ],buttons:[['CLEAR',()=>({Q:0})],['PRESET',()=>({Q:1})]]},
+  exam: ()=>
+    sec('1. Aim','<p>To study and realise SR, T, D, JK and master-slave flip-flops using logic gates, verify their truth tables, and familiarise with flip-flop ICs 7476, 7473 and 7474.</p>')+
+    sec('2. Theory','<p>The flip-flop is a basic memory element. It is basically a <b>bistable multivibrator</b> with two stable states: SET (1) and RESET / CLEAR (0). It normally has two data inputs and two complementary outputs Q and '+Q+': if Q = 0 then '+Q+' = 1, and vice versa. It also has a clock (CK) terminal to which a train of pulses is applied. The output at any instant depends on the past output and the present input, and the state can change only when a clock pulse is applied.</p>')+
+    sec('3. SR flip-flop','<p>The SET-RESET flip-flop is the basic flip-flop and memory cell. Q = 1 if S = 1 and R = 0; if S is then made 0, Q stays 1, so it memorises 1. Similarly it can memorise 0. In a clocked SR flip-flop the inputs are effective only when the clock pulse is present. S<sub>n</sub>, R<sub>n</sub> are the inputs before the n<sup>th</sup> pulse and Q<sub>n+1</sub> is the output after it. <b>S = R = 1 is not permitted.</b></p><div class="eq">Q<sub>n+1</sub> = S + '+ov('R')+'Q<sub>n</sub>   (with SR = 0)</div>'+table(['S','R','Q<sub>n+1</sub>','State'],[['0','0','Q<sub>n</sub>','No change'],['0','1','0','Reset'],['1','0','1','Set'],['1','1','?','Invalid']],null,2))+
+    sec('4. JK flip-flop','<p>The S = R = 1 difficulty of the SR flip-flop is overcome by converting it into a JK flip-flop, with <b>S = J'+Q+'</b> and <b>R = KQ</b>. When J = K = 1 the output toggles. Preset (Pr) and Clear (Cr) terminals are provided to set or clear the flip-flop before inputs are applied.</p><div class="eq">Q<sub>n+1</sub> = J'+QN+' + '+ov('K')+'Q<sub>n</sub></div>'+table(['J','K','Q<sub>n+1</sub>','State'],[['0','0','Q<sub>n</sub>','No change'],['0','1','0','Reset'],['1','0','1','Set'],['1','1',QN,'Toggle']],null,2))+
+    sec('5. Race-around condition & master-slave JK','<p>In a level-triggered JK flip-flop with J = K = 1, the output toggles once every propagation delay for as long as the clock is HIGH. If the clock pulse width is greater than the propagation delay (t<sub>p</sub> &gt; Δt), the output toggles many times in one pulse and the final state is uncertain. This is the <b>race-around condition</b>.</p><p>It is rectified in the <b>master-slave JK flip-flop</b>, made by cascading two JK flip-flops. The clock is fed to the first stage (master) and the inverted clock to the second stage (slave). The master responds while the clock is HIGH; the slave copies the master when the clock goes LOW. So the slave follows the master and the output changes only once per clock pulse, eliminating racing.</p>')+
+    sec('6. D flip-flop','<p>An SR or JK flip-flop is converted into a delay (D) flip-flop by giving D to S (or J) and '+ov('D')+' to R (or K). The output is the same as the input D but delayed by one clock pulse, so it is used to provide a one-bit delay.</p><div class="eq">Q<sub>n+1</sub> = D</div>'+table(['D','Q<sub>n+1</sub>'],[['0','0'],['1','1']],null,1))+
+    sec('7. T flip-flop','<p>T stands for toggle. It is made from a JK flip-flop by joining J and K together as T. When T = 1 the output toggles (changes state) on each clock pulse; when T = 0 the output does not change.</p><div class="eq">Q<sub>n+1</sub> = T ⊕ Q<sub>n</sub></div>'+table(['T','Q<sub>n+1</sub>'],[['0','Q<sub>n</sub>'],['1',QN]],null,1))+
+    sec('8. ICs used','<ul><li><b>7476</b> – dual JK master-slave flip-flop with preset and clear (16 pins, V<sub>CC</sub> pin 5, GND pin 13).</li><li><b>7473</b> – dual JK flip-flop with clear (14 pins, V<sub>CC</sub> pin 4, GND pin 11).</li><li><b>7474</b> – dual D flip-flop, positive-edge triggered, with preset and clear (14 pins, V<sub>CC</sub> pin 14, GND pin 7).</li></ul>')+
+    sec('9. Result','<p>Studied and realised SR, T, D, JK and master-slave flip-flops using logic gates and verified their truth tables. Familiarised with flip-flop ICs 7476, 7473 and 7474.</p>'),
+  points:[
+    'Flip-flop = 1-bit memory = bistable multivibrator.',
+    'Q and '+Q+' are always complementary.',
+    'SR: S = R = 1 is invalid. JK fixes it: J = K = 1 → toggle.',
+    'JK → SR conversion: S = J'+Q+', R = KQ.',
+    'Race-around: J = K = 1 and clock width t<sub>p</sub> &gt; propagation delay Δt → output toggles repeatedly.',
+    'Cure: master-slave (or edge triggering). Master on CLK, slave on '+ov('CLK')+'.',
+    'D = delay / data flip-flop: Q<sub>n+1</sub> = D. Used for 1-bit delay and registers.',
+    'T = toggle flip-flop: Q<sub>n+1</sub> = T ⊕ Q<sub>n</sub>. Used in counters.',
+    'Preset and clear are asynchronous (work without the clock), usually active LOW.',
+    '7476: V<sub>CC</sub> pin 5, GND pin 13 (different from normal 14/7).'
+  ],
+  abbr:[['FF','Flip-Flop'],['SR','Set-Reset'],['JK','JK flip-flop (J acts like set, K like reset)'],['D','Data / Delay flip-flop'],['T','Toggle flip-flop'],['MS','Master-Slave'],['CLK / CK','Clock'],['PR / Pr','Preset (force Q = 1)'],['CLR / Cr','Clear (force Q = 0)'],['Q<sub>n</sub>','Present state'],['Q<sub>n+1</sub>','Next state'],['t<sub>p</sub>','Clock pulse width'],['Δt / t<sub>pd</sub>','Propagation delay']]
+},
+/* ===== 06 ===== */
+{ id:'exp06', no:'06', short:'Asynchronous Counter', title:'Asynchronous (Ripple) 4-bit Up & Down Counter', ics:['7476'],
+  lead:'A counter is a group of flip-flops that steps through binary numbers on each clock pulse. In an asynchronous counter only the FIRST flip-flop gets the clock. Each flip-flop\'s output acts as the clock for the next one, so the change "ripples" down the chain. N flip-flops count 2<sup>N</sup> states: 4 flip-flops count 0000 to 1111 (16 states).',
+  terms:[
+    ['Counter','A set of flip-flops whose state changes in a fixed sequence with each input pulse.'],
+    ['Modulus (mod)','The number of states a counter goes through. N flip-flops → up to 2<sup>N</sup> states.'],
+    ['Asynchronous / ripple counter','Clock goes only to the first flip-flop; each output clocks the next.'],
+    ['Up counter','Counts upwards: 0000 → 1111. Next FF is clocked from Q.'],
+    ['Down counter','Counts downwards: 1111 → 0000. Next FF is clocked from '+Q+'.'],
+    ['Propagation delay','The small time a flip-flop takes to change. In a ripple counter these delays add up.'],
+    ['Glitch','A wrong, very short output state that appears while the ripple is still passing through.'],
+    ['Toggle mode','JK flip-flop with J = K = 1, so it flips on every clock edge (acts as T flip-flop).']
+  ],
+  picture:'Like a car odometer: the rightmost wheel turns every step, and each time it rolls over from 9 to 0 it nudges the next wheel. Here each flip-flop flips when the previous one goes from 1 to 0. Press CLK in the bench below to watch the bits change one after another.',
+  hook:'Async = "one by one" = ripple. Clock only to FF0. Two disadvantages: (1) propagation delay limits maximum clock frequency, (2) decoding glitches. Up counter: CLEAR first. Down counter: PRESET first.',
+  sim:{type:'seq',modes:[
+    {label:'4-bit UP',inputs:[],bits:['Q3','Q2','Q1','Q0'],ripple:true,init:()=>split(0,4,'Q'),next:s=>{const v=(join(s,4,'Q')+1)%16;return {s:split(v,4,'Q'),msg:'Count = '+v};}},
+    {label:'4-bit DOWN',inputs:[],bits:['Q3','Q2','Q1','Q0'],ripple:true,init:()=>split(15,4,'Q'),next:s=>{const v=(join(s,4,'Q')+15)%16;return {s:split(v,4,'Q'),msg:'Count = '+v};}}
+  ],buttons:[['CLEAR → 0000',()=>split(0,4,'Q')],['PRESET → 1111',()=>split(15,4,'Q')]],decimal:true},
+  exam: ()=>
+    sec('1. Aim','<p>To set up an asynchronous 4-bit up counter and a 4-bit down counter and verify their truth tables.</p>')+
+    sec('2. Theory','<p>A digital counter is a set of flip-flops whose states change in response to the pulses applied at the input of the counter. The number of counting states depends on the number of flip-flops: <b>N flip-flops count 2<sup>N</sup> states</b>.</p><p>In an <b>asynchronous counter</b> the clock is not given to all the flip-flops. The clock is applied only to the first flip-flop, and the output of the first flip-flop is given as the clock to the second, and so on. Hence it is also called a <b>ripple counter</b>. JK flip-flops are used in toggle mode (J = K = 1).</p><p>A 4-bit counter has 2<sup>4</sup> = 16 states, 0000 to 1111. The <b>up counter</b> counts from 0000 to 1111 and the <b>down counter</b> from 1111 to 0000. With negative-edge-triggered flip-flops, taking Q as the clock of the next stage gives an up counter, and taking '+Q+' gives a down counter.</p>')+
+    sec('3. Disadvantages','<ul><li>Due to the propagation delay of each flip-flop adding up, the <b>maximum clock frequency is limited</b>: f<sub>max</sub> ≈ 1 / (N × t<sub>pd</sub>).</li><li><b>Decoding glitches</b> (false momentary states) are generated while the bits change one after another.</li></ul>')+
+    sec('4. Working (from procedure)','<p><b>Up counter:</b> PRESET pins are connected to +5 V and all CLEAR pins are joined. All flip-flops are cleared initially by giving logic LOW to the common CLEAR, then it is left open. Clock pulses are applied and the counter counts up.</p><p><b>Down counter:</b> CLEAR pins are connected to +5 V and all PRESET pins are joined. All flip-flops are set to 1 initially by giving logic LOW to the common PRESET. Clock pulses are applied and the counter counts down.</p>')+
+    sec('5. Truth table','<div class="tables">'+table(['CLK','Q3 Q2 Q1 Q0 (UP)'],Array.from({length:16},(_,i)=>[i,bstr(i,4).split('').join(' ')]),'Up counter',1)+table(['CLK','Q3 Q2 Q1 Q0 (DOWN)'],Array.from({length:16},(_,i)=>[i,bstr(15-i,4).split('').join(' ')]),'Down counter',1)+'</div>')+
+    sec('6. Result','<p>Set up an asynchronous 4-bit up counter and 4-bit down counter and verified their truth tables.</p>'),
+  points:[
+    'N flip-flops → 2<sup>N</sup> states. 4-bit counter → 16 states (mod-16).',
+    'Asynchronous = ripple counter: clock to the first flip-flop only.',
+    'JK flip-flops in toggle mode (J = K = 1, tied to +5 V).',
+    'Up counter: next clock from Q. Down counter: next clock from '+Q+' (negative-edge FFs).',
+    'Disadvantage 1: propagation delays add up → low maximum frequency.',
+    'Disadvantage 2: decoding glitches.',
+    'Up counter is cleared to 0000 first; down counter is preset to 1111 first.',
+    'IC 7476 (dual JK) → two ICs for a 4-bit counter.'
+  ],
+  abbr:[['MOD','Modulus (number of states)'],['CLK','Clock'],['t<sub>pd</sub>','Propagation delay'],['f<sub>max</sub>','Maximum clock frequency'],['PR / CLR','Preset / Clear'],['Q<sub>0</sub>','LSB output (changes fastest)'],['Q<sub>3</sub>','MSB output']]
+},
+/* ===== 07 ===== */
+{ id:'exp07', no:'07', short:'Sync Counter & Sequence', title:'Synchronous Counter & Sequence Generator', ics:['7476','7408'],
+  lead:'In a synchronous counter the clock goes to ALL flip-flops at the same time. Extra logic gates look at the present state and decide the J and K inputs, so each flip-flop knows whether to change on the next clock. A mod-8 counter needs 3 flip-flops (000 to 111). A sequence generator is the same idea, designed to step through any chosen sequence such as 0 → 3 → 5 → 7 → 0.',
+  terms:[
+    ['Synchronous counter','All flip-flops get the same clock simultaneously, so all bits change together.'],
+    ['Mod-8 counter','Counter with 8 states, 000 to 111. Needs 3 flip-flops.'],
+    ['State table','Table of present state → next state.'],
+    ['Excitation table','Tells which J, K values cause a given change of Q. (0→0: J=0, K=X …)'],
+    ['Don\'t care (X)','The value does not matter, so it can be 0 or 1 to simplify the K-map.'],
+    ['K-map','Karnaugh map: a grid used to simplify Boolean expressions for J and K.'],
+    ['Sequence generator','A circuit that produces a prescribed sequence of states in step with a clock.']
+  ],
+  picture:'A ripple counter is a line of dominoes falling one after another. A synchronous counter is a marching band: every member steps on the same beat, and the gates are the conductor telling each one whether to change step.',
+  hook:'Design steps: state table → excitation table → K-maps → J, K equations → circuit. JK excitation: 0→0 = 0X, 0→1 = 1X, 1→0 = X1, 1→1 = X0. Mod-8: J0=K0=1, J1=K1=Q0, J2=K2=Q1Q0.',
+  sim:{type:'seq',modes:[
+    {label:'Mod-8 counter',inputs:[],bits:['Q2','Q1','Q0'],init:()=>split(0,3,'Q'),
+      jk:s=>({J2:s.Q1&s.Q0,K2:s.Q1&s.Q0,J1:s.Q0,K1:s.Q0,J0:1,K0:1}),
+      next:function(s){return applyJK(s,this.jk(s));}},
+    {label:'Sequence 0-3-5-7',inputs:[],bits:['Q2','Q1','Q0'],init:()=>split(0,3,'Q'),
+      jk:s=>({J2:s.Q0,K2:s.Q1,J1:1,K1:1,J0:1,K0:s.Q2&s.Q1}),
+      next:function(s){return applyJK(s,this.jk(s));}}
+  ],buttons:[['CLEAR → 000',()=>split(0,3,'Q')]],decimal:true},
+  exam: ()=>
+    sec('1. Aim','<p>(i) To design and set up a mod-8 synchronous counter and verify its truth table. (ii) To design and set up a sequence generator for the sequence 0 → 3 → 5 → 7 → 0 …</p>')+
+    sec('2. Theory','<p>In a <b>synchronous counter</b> the clock is given simultaneously to all the flip-flops. Mostly JK flip-flops are used. The present state of all flip-flops, passed through logic circuitry connected to the J and K inputs, determines the next state. A <b>mod-8 counter</b> counts from 000 to 111, so it needs 3 flip-flops. The logic for the J, K inputs is designed from the truth table using the excitation table and K-maps.</p><p>A circuit that generates a prescribed sequence of bits in synchronism with a clock is called a <b>sequence generator</b>. It can be used as a counter, random bit generator or code generator. The sequence 0-3-5-7-0 is designed using JK flip-flops (IC 7476).</p>')+
+    sec('3. JK excitation table',table(['Q<sub>n</sub>','Q<sub>n+1</sub>','J','K'],[['0','0','0','X'],['0','1','1','X'],['1','0','X','1'],['1','1','X','0']],null,2))+
+    sec('4. Design of mod-8 synchronous counter',table(['Q2 Q1 Q0','Q2′ Q1′ Q0′','J2 K2','J1 K1','J0 K0'],[['000','001','0X','0X','1X'],['001','010','0X','1X','X1'],['010','011','0X','X0','1X'],['011','100','1X','X1','X1'],['100','101','X0','0X','1X'],['101','110','X0','1X','X1'],['110','111','X0','X0','1X'],['111','000','X1','X1','X1']],'State & excitation table',2)+'<div class="eq">J0 = K0 = 1<br>J1 = K1 = Q0<br>J2 = K2 = Q1·Q0</div>')+
+    sec('5. Design of sequence generator 0-3-5-7',table(['Q2 Q1 Q0','Q2′ Q1′ Q0′','J2 K2','J1 K1','J0 K0'],[['000 (0)','011 (3)','0X','1X','1X'],['011 (3)','101 (5)','1X','X1','X0'],['101 (5)','111 (7)','X0','1X','X0'],['111 (7)','000 (0)','X1','X1','X1']],'States 1, 2, 4, 6 are unused (don\'t care)',2)+'<div class="eq">J2 = Q0   K2 = Q1<br>J1 = 1    K1 = 1<br>J0 = 1    K0 = Q2·Q1</div>')+
+    sec('6. Synchronous vs asynchronous',table(['Synchronous','Asynchronous'],[['Clock to all FFs together','Clock to first FF only'],['Faster, no delay build-up','Slower, delays add up'],['No decoding glitches','Glitches possible'],['Needs extra logic gates','Simple, fewer gates']],null,9).replace(/<td>/g,'<td class="l">'))+
+    sec('7. Result','<p>Designed and set up a mod-8 synchronous counter and a sequence generator for the sequence 0-3-5-7-0, and verified their truth tables.</p>'),
+  points:[
+    'Synchronous: common clock to all flip-flops; all bits change together.',
+    'Mod-8 → 3 flip-flops (2<sup>3</sup> = 8).',
+    'Design flow: state table → excitation table → K-map → J, K equations → circuit.',
+    'JK excitation: 0→0 = 0X, 0→1 = 1X, 1→0 = X1, 1→1 = X0.',
+    'Mod-8 equations: J0 = K0 = 1, J1 = K1 = Q0, J2 = K2 = Q1Q0.',
+    'Sequence 0-3-5-7 equations: J2 = Q0, K2 = Q1, J1 = K1 = 1, J0 = 1, K0 = Q2Q1.',
+    'Unused states are treated as don\'t cares (X) to simplify the logic.',
+    'Faster than ripple counters and free from decoding glitches.',
+    'Start by giving CLEAR = LOW, PRESET = HIGH, then both HIGH before clocking.'
+  ],
+  abbr:[['K-map','Karnaugh map'],['X','Don\'t care'],['PS / NS','Present state / Next state'],['MOD-8','Modulus 8 (8 states)'],['J, K','Inputs of JK flip-flop']]
+},
+/* ===== 08 ===== */
+{ id:'exp08', no:'08', short:'Shift Reg, Ring, Johnson', title:'Shift Register, Ring Counter & Johnson Counter', ics:['7474','7476'],
+  lead:'A register is a row of flip-flops that stores a binary number, one bit per flip-flop. A shift register moves the stored bits one place on every clock pulse. Data can go in and come out serially (one bit at a time) or in parallel (all bits at once). Feeding the last output back to the first input turns a shift register into a ring counter; feeding it back inverted makes a Johnson counter.',
+  terms:[
+    ['Register','A group of flip-flops used to store a binary number.'],
+    ['Shift register','A register whose bits shift one position on each clock pulse.'],
+    ['SISO','Serial In Serial Out: bits enter one by one and leave one by one from the last flip-flop.'],
+    ['SIPO','Serial In Parallel Out: bits enter one by one; all outputs are read together.'],
+    ['PIPO','Parallel In Parallel Out: all bits are loaded together and read together.'],
+    ['PISO','Parallel In Serial Out: loaded together, shifted out one by one.'],
+    ['Ring counter','Shift register with last output fed back to first input. A single 1 circulates. N flip-flops → N states.'],
+    ['Johnson counter','Twisted ring counter: last '+Q+' fed back to first input. N flip-flops → 2N states.']
+  ],
+  picture:'A shift register is a line of people passing buckets: on every whistle (clock) each person hands their bucket to the next. A ring counter is people in a circle passing one ball round and round. A Johnson counter fills the line with 1s one by one, then empties it one by one.',
+  hook:'Ring = N states, divide-by-N. Johnson = 2N states, divide-by-2N, also called twisted ring. Ring starts at 1000 (preset first FF, clear the rest). Johnson starts at 0000.',
+  sim:{type:'seq',modes:[
+    {label:'SISO / SIPO',inputs:['Din'],bits:['QA','QB','QC','QD'],init:()=>({QA:0,QB:0,QC:0,QD:0}),next:(s,v)=>({s:{QA:v.Din,QB:s.QA,QC:s.QB,QD:s.QC},msg:'Shifted right. Serial out (QD) = '+s.QC}),note:'Read only QD for SISO, or all four outputs for SIPO.'},
+    {label:'PIPO',inputs:['A','B','C','D'],bits:['QA','QB','QC','QD'],init:()=>({QA:0,QB:0,QC:0,QD:0}),next:(s,v)=>({s:{QA:v.A,QB:v.B,QC:v.C,QD:v.D},msg:'All 4 bits loaded in one clock pulse'})},
+    {label:'Ring',inputs:[],bits:['Q3','Q2','Q1','Q0'],init:()=>({Q3:1,Q2:0,Q1:0,Q0:0}),next:s=>({s:{Q3:s.Q0,Q2:s.Q3,Q1:s.Q2,Q0:s.Q1},msg:'Last output → first input'})},
+    {label:'Johnson',inputs:[],bits:['Q3','Q2','Q1','Q0'],init:()=>({Q3:0,Q2:0,Q1:0,Q0:0}),next:s=>({s:{Q3:1-s.Q0,Q2:s.Q3,Q1:s.Q2,Q0:s.Q1},msg:'Inverted last output ('+ov('Q0')+') → first input'})}
+  ],buttons:[['RESET',null]]},
+  exam: ()=>
+    sec('1. Aim','<p>(i) To study the working of shift registers: Serial In Serial Out (SISO), Serial In Parallel Out (SIPO) and Parallel In Parallel Out (PIPO) using D flip-flops. (ii) To design and set up 4-bit Johnson and ring counters using flip-flops.</p>')+
+    sec('2. Theory','<p>A <b>register</b> is a group of flip-flops that can be used to store a binary number. A <b>shift register</b> is a register which accepts a binary number and shifts it in a particular manner. Data may be entered into and taken out of the shift register in serial or parallel mode.</p><ul><li><b>SISO:</b> data enters serially and the output is taken serially from the last flip-flop. An n-bit SISO needs n clock pulses to load and n more to read out, so it is used as a delay line.</li><li><b>SIPO:</b> input is fed serially and the output is taken in parallel from each flip-flop, so the intermediate stages are visible. Used for serial-to-parallel conversion.</li><li><b>PIPO:</b> input is fed in parallel and the output taken in parallel from each flip-flop. Data loads in a single clock pulse.</li></ul>')+
+    sec('3. Ring counter','<p>A ring counter is constructed using JK flip-flops by connecting the Q and '+Q+' outputs of one flip-flop to the J and K inputs of the next. The outputs of the final flip-flop are connected to the inputs of the first. To start, the first flip-flop is set using preset and the others are reset using clear (1000). There are four unique states for 4 flip-flops. A ring counter is called a <b>divide-by-N counter</b>, where N is the number of flip-flops.</p>'+table(['CLK','Q3 Q2 Q1 Q0'],[['0','1 0 0 0'],['1','0 1 0 0'],['2','0 0 1 0'],['3','0 0 0 1'],['4','1 0 0 0']],null,1))+
+    sec('4. Johnson counter','<p>In a Johnson counter the '+Q+' output of the last flip-flop is connected to the J input of the first flip-flop and Q to its K input. After the first clock pulse the first flip-flop is set and the rest are reset. After the fourth pulse all flip-flops are set. After the fifth pulse the first is reset and the others stay set. After the eighth pulse all are reset. It is also called a <b>twisted ring counter</b> or <b>divide-by-2N counter</b>.</p>'+table(['CLK','Q3 Q2 Q1 Q0'],[['0','0 0 0 0'],['1','1 0 0 0'],['2','1 1 0 0'],['3','1 1 1 0'],['4','1 1 1 1'],['5','0 1 1 1'],['6','0 0 1 1'],['7','0 0 0 1'],['8','0 0 0 0']],null,1))+
+    sec('5. Ring vs Johnson',table(['Ring counter','Johnson counter'],[['Q of last FF → first FF','Q̅ of last FF → first FF'],['N states with N FFs','2N states with N FFs'],['Divide-by-N','Divide-by-2N'],['Started with 1000 (preset needed)','Started with 0000 (clear)']],null,9).replace(/<td>/g,'<td class="l">'))+
+    sec('6. Result','<p>Studied the working of SISO, SIPO and PIPO shift registers using D flip-flops, and set up 4-bit ring and Johnson counters using flip-flops.</p>'),
+  points:[
+    'Register = group of flip-flops storing a binary number. Shift register = register that shifts data.',
+    'Four types: SISO, SIPO, PISO, PIPO.',
+    'Shift registers in the lab use D flip-flops (IC 7474).',
+    'SISO: n-bit needs n clocks to enter and n clocks to exit → delay line.',
+    'SIPO: serial-to-parallel converter. PIPO: one clock to load all bits.',
+    'Ring counter: N flip-flops → N states, divide-by-N, starts at 1000.',
+    'Johnson (twisted ring) counter: N flip-flops → 2N states, divide-by-2N.',
+    'A 4-bit Johnson counter has 8 used states and 2<sup>4</sup> − 8 = 8 unused states.',
+    'Ring and Johnson counters are built with JK flip-flops (IC 7476).'
+  ],
+  abbr:[['SISO','Serial In Serial Out'],['SIPO','Serial In Parallel Out'],['PISO','Parallel In Serial Out'],['PIPO','Parallel In Parallel Out'],['D<sub>in</sub>','Serial data input'],['N','Number of flip-flops']]
+},
+/* ===== 09 ===== */
+{ id:'exp09', no:'09', short:'Ripple Carry Adder', title:'Design of Ripple Carry Adder', ics:['Simulator'],
+  lead:'A ripple carry adder adds two N-bit numbers by connecting N full adders in a chain. Each adder\'s carry-out becomes the next adder\'s carry-in, so the carry "ripples" from the LSB to the MSB. For a 4-bit adder the first stage can be a half adder because there is no carry coming in.',
+  terms:[
+    ['Ripple carry adder','N full adders in cascade where each C<sub>out</sub> feeds the next C<sub>in</sub>.'],
+    ['Carry ripple','The carry travels stage by stage from LSB to MSB.'],
+    ['Propagation delay','Each stage must wait for the carry from the previous stage, so delays add up.'],
+    ['Why addition matters','Multiplication = repeated addition, subtraction = adding the negated number, division = repeated subtraction.']
+  ],
+  picture:'It is long-hand column addition done by four people sitting in a row. The person on the right adds the first column and passes the carry to the left. Each person has to wait for the carry from their right neighbour before giving the final answer.',
+  hook:'4-bit RCA = 3 full adders + 1 half adder. Stage i: S<sub>i</sub> = A<sub>i</sub> ⊕ B<sub>i</sub> ⊕ C<sub>i</sub>, C<sub>i+1</sub> = A<sub>i</sub>B<sub>i</sub> + (A<sub>i</sub> ⊕ B<sub>i</sub>)C<sub>i</sub>. Drawback: slow (carry delay × N). Faster fix: carry look-ahead adder.',
+  sim:{type:'comb',modes:[
+    {label:'4-bit RCA',inputs:['A3','A2','A1','A0','|','B3','B2','B1','B0'],outs:[
+      ['Carries',v=>{const c=rca(v).c;return {bits:[c[4],c[3],c[2],c[1]],names:['C4','C3','C2','C1']};}],
+      ['Sum',v=>({bits:rca(v).s.slice().reverse(),names:['S3','S2','S1','S0']})],
+      ['Result',v=>{const a=num(v,'A',4),b=num(v,'B',4);return {text:a+' + '+b+' = '+(a+b)+'  → '+(a+b>15?'carry 1, ':'')+bstr((a+b)&15,4)};}]
+    ],note:'Stage 0 is a half adder; stages 1–3 are full adders. Try 0011 + 0111 (3 + 7) and watch the carries.'}
+  ]},
+  exam: ()=>
+    sec('1. Aim','<p>To understand the operation of a ripple carry adder, specifically how the carry ripples through the adder, and to design a 4-bit ripple carry adder using full adders.</p>')+
+    sec('2. Theory','<p>Arithmetic operations like addition, subtraction, multiplication and division are basic operations implemented in digital computers using basic gates. If addition can be implemented, the others follow easily: multiplication by repeated addition, subtraction by negating one operand, and division by repeated subtraction.</p><p>A half adder adds two 1-bit numbers. A circuit that adds N-bit binary numbers can be created by connecting multiple full adders. Each full adder takes a C<sub>in</sub> which is the C<sub>out</sub> of the previous adder. This is called a <b>ripple carry adder</b>, since each carry bit "ripples" to the next full adder. The first (and only the first) full adder may be replaced by a half adder.</p>')+
+    sec('3. Equations for stage i','<div class="eq">S<sub>i</sub> = A<sub>i</sub> ⊕ B<sub>i</sub> ⊕ C<sub>i</sub><br>C<sub>i+1</sub> = A<sub>i</sub>B<sub>i</sub> + (A<sub>i</sub> ⊕ B<sub>i</sub>)C<sub>i</sub>     (C<sub>0</sub> = 0)</div>')+
+    sec('4. Components & working','<p>A 4-bit ripple carry adder uses 3 full adders and 1 half adder. The LSB bits A<sub>0</sub>, B<sub>0</sub> go to the half adder; its carry goes to the full adder for bit 1, and so on. The carry of the last full adder is the final carry out.</p><div class="eq">Example: 0011 (3) + 0111 (7) = 1010 (10), final carry 0</div>')+
+    sec('5. Disadvantage','<p>Each stage must wait for the carry from the previous stage, so the total delay is about N × (carry delay of one full adder). For large N the adder becomes slow. A carry look-ahead adder is used to overcome this.</p>')+
+    sec('6. Result','<p>Designed a 4-bit ripple carry adder using full adders and a half adder, and verified how the carry ripples through the stages.</p>'),
+  points:[
+    'RCA = full adders in cascade; C<sub>out</sub> of one stage → C<sub>in</sub> of next.',
+    '4-bit RCA: 3 full adders + 1 half adder (first stage).',
+    'First stage can be a half adder because C<sub>in</sub> = 0.',
+    'Carry travels from LSB to MSB.',
+    'Main drawback: propagation delay grows with number of bits.',
+    'Remedy: Carry Look-Ahead Adder (CLA).',
+    'Done on a simulator (virtual lab), not on the trainer kit.'
+  ],
+  abbr:[['RCA','Ripple Carry Adder'],['CLA','Carry Look-Ahead Adder'],['FA / HA','Full Adder / Half Adder'],['C<sub>i</sub>','Carry into stage i']]
+},
+/* ===== 10 ===== */
+{ id:'exp10', no:'10', short:'ALU', title:'Design of Arithmetic Logic Unit (4-bit)', ics:['Simulator'],
+  lead:'An ALU (Arithmetic Logic Unit) is the part of a processor that does arithmetic (like add) and logic operations (like AND, OR, XOR). Inside, every operation is computed at the same time, and select lines S1 S0 (through a multiplexer) choose which result reaches the output. A 4-bit ALU is four 1-bit ALUs joined, with the carry passed from one to the next.',
+  terms:[
+    ['ALU','Arithmetic Logic Unit: a digital circuit that performs arithmetic and logical operations.'],
+    ['Arithmetic operations','Addition, subtraction, multiplication, division.'],
+    ['Logic operations','AND, OR, XOR, NAND, NOR etc., done bit by bit.'],
+    ['Select lines (S1 S0)','Control inputs that choose which operation appears at the output.'],
+    ['1-bit ALU','One slice: AND, OR, XOR gates and a full adder feeding a 4:1 MUX.']
+  ],
+  picture:'An ALU is a calculator with four buttons. All four answers are worked out in the background at once, and the buttons (S1 S0) just decide which answer is shown on the screen.',
+  hook:'S1 S0: 00 = AND, 01 = OR, 10 = XOR, 11 = ADD. Logic ops are bitwise; only ADD uses the carry chain.',
+  sim:{type:'comb',modes:[
+    {label:'4-bit ALU',inputs:['A3','A2','A1','A0','|','B3','B2','B1','B0','|','S1','S0','|','Ci'],outs:[
+      ['Operation',v=>({text:['AND','OR','XOR','ADD'][v.S1*2+v.S0]+'  (S1 S0 = '+v.S1+v.S0+')'})],
+      ['F',v=>({bits:toBits(alu(v).f,4),names:['F3','F2','F1','F0']})],
+      ['C<sub>out</sub>',v=>alu(v).c],
+      ['Result',v=>{const a=num(v,'A',4),b=num(v,'B',4),r=alu(v);return {text:bstr(a,4)+' '+['AND','OR','XOR','+'][v.S1*2+v.S0]+' '+bstr(b,4)+(v.S1&&v.S0&&v.Ci?' + 1':'')+' = '+bstr(r.f,4)+(v.S1&&v.S0?'  ('+(a+b+v.Ci)+')':'')};}]
+    ],note:'Manual example: S1 S0 = 11, A = 0010, B = 0100 → F = 0110, carry 0.'}
+  ]},
+  exam: ()=>
+    sec('1. Aim','<p>To understand the behaviour of an arithmetic logic unit and to design a 4-bit ALU performing AND, OR, XOR and ADD operations.</p>')+
+    sec('2. Theory','<p>An <b>ALU (Arithmetic Logic Unit)</b> is a digital circuit that performs arithmetic operations like addition, subtraction, multiplication and division, and logical operations like AND, OR, XOR, NAND and NOR. It is the core computing part of a processor (CPU).</p><p>A 4-bit ALU is built from four 1-bit ALUs. Each 1-bit ALU has inputs A, B, carry in (C<sub>0</sub>) and select lines S<sub>1</sub>, S<sub>0</sub>, and outputs F and carry out. Inside, an AND gate, an OR gate, an XOR gate and a full adder all operate on A and B, and a 4:1 multiplexer controlled by S<sub>1</sub> S<sub>0</sub> selects one result as F. The carry out of each stage is connected to the carry in of the next.</p>')+
+    sec('3. Function table',table(['S1','S0','Output F'],[['0','0','A AND B'],['0','1','A OR B'],['1','0','A XOR B'],['1','1','A ADD B (A + B + C<sub>in</sub>)']],null,2))+
+    sec('4. Example','<div class="eq">S1 S0 = 11 (ADD), A = 0010, B = 0100 → F = 0110, carry = 0</div>')+
+    sec('5. Result','<p>Designed a 4-bit ALU for AND, OR, XOR and ADD operations and verified its output for different input combinations.</p>'),
+  points:[
+    'ALU = Arithmetic Logic Unit, the "calculator" of the CPU.',
+    'S1 S0 = 00 AND, 01 OR, 10 XOR, 11 ADD.',
+    '4-bit ALU = four 1-bit ALUs with carry chained.',
+    'Each 1-bit ALU: AND + OR + XOR + full adder → 4:1 MUX.',
+    'Logic operations act on each bit separately; only ADD uses the carry.',
+    '2 select lines → 2<sup>2</sup> = 4 operations.',
+    'Done on a simulator (11 bit switches, 5 bit displays, four 1-bit ALUs).'
+  ],
+  abbr:[['ALU','Arithmetic Logic Unit'],['CPU','Central Processing Unit'],['S<sub>0</sub>, S<sub>1</sub>','Operation select lines'],['F','Function output'],['C<sub>0</sub> / C<sub>in</sub>','Input carry']]
+},
+/* ===== 11 ===== */
+{ id:'exp11', no:'11', short:'4×3 RAM', title:'Design of 4 × 3 RAM Memory', ics:['Simulator'],
+  lead:'A memory stores many words. A 4 × 3 RAM holds 4 words of 3 bits each, so it has 4 × 3 = 12 binary cells. Two address lines pass through a 2-to-4 decoder to pick one word. Memory enable turns the memory on. The read/write line chooses the operation: 1 = read (cell → output), 0 = write (input → cell).',
+  terms:[
+    ['Memory unit','A collection of storage cells plus the circuits that move information in and out.'],
+    ['RAM','Random Access Memory: any location can be reached directly for read or write.'],
+    ['Word','A group of bits stored together at one address (here 3 bits).'],
+    ['Binary cell (BC)','Stores 1 bit. Inputs: select, read/write, data in. Output: data out. Built from a flip-flop and gates.'],
+    ['Address lines','Inputs that pick the word. m words need k lines, where 2<sup>k</sup> = m. 4 words → 2 lines.'],
+    ['Decoder','2 × 4 decoder turns the 2-bit address into one of 4 word-select lines.'],
+    ['Memory enable','When 0, no word is selected. When 1, the addressed word is selected.'],
+    ['R/'+ov('W'),'1 = read, 0 = write.']
+  ],
+  picture:'Think of a cabinet with 4 drawers (words), each holding 3 coins (bits). The address is the drawer number, the decoder opens that drawer, enable means the cabinet is unlocked, and R/W decides whether you look inside (read) or put new coins in (write).',
+  hook:'m × n RAM → m·n cells. 4 × 3 → 12 cells, 2 address lines, 2 × 4 decoder. R/'+ov('W')+' = 1 read, 0 write. Enable = 0 → nothing selected. 9 OR gates: each of 3 output bits ORs 4 words (3 two-input ORs each).',
+  sim:{type:'ram'},
+  exam: ()=>
+    sec('1. Aim','<p>To design a 4 × 3 RAM memory unit and understand how it operates during read and write operations.</p>')+
+    sec('2. Theory','<p>A <b>memory unit</b> is a collection of storage cells together with the associated circuits needed to transfer information in and out of the device. Memory cells that can be accessed for information transfer to or from any desired random location are called <b>random access memory (RAM)</b>.</p><p><b>Internal construction:</b> a RAM of m words with n bits per word consists of m × n binary storage cells and associated decoding circuits for selecting individual words. The binary cell is the basic building block of a memory unit.</p>')+
+    sec('3. Binary cell','<p>The binary cell has three inputs and one output. The <b>select</b> input enables the cell for reading or writing, and the <b>read/write</b> input determines the operation when it is selected. A <b>1</b> on read/write gives the <b>read</b> operation by forming a path from the flip-flop to the output terminal. A <b>0</b> gives the <b>write</b> operation by forming a path from the input terminal to the flip-flop.</p>')+
+    sec('4. 4 × 3 RAM organisation','<p>The RAM consists of 4 words of 3 bits each, a total of <b>12 binary cells</b>. A memory with 4 words needs <b>two address lines</b>. The two address inputs go through a <b>2 × 4 decoder</b> to select one of the four words. The decoder is enabled by the <b>memory enable</b> input. When memory enable is 0, all decoder outputs are 0 and no word is selected. When memory enable is 1, one of the four words is selected by the address. Once a word is selected, the read/write input determines the operation. The outputs of the cells in each bit column are combined through OR gates to give the data output.</p>'+table(['Memory enable','R/'+ov('W'),'Operation'],[['0','X','None (memory disabled)'],['1','0','Write: data input → selected word'],['1','1','Read: selected word → data output']],null,2))+
+    sec('5. Result','<p>Designed a 4 × 3 RAM using binary cells and a 2 × 4 decoder and verified its read and write operations.</p>'),
+  points:[
+    'RAM = Random Access Memory: any location can be accessed directly.',
+    'm words × n bits → m × n binary cells. 4 × 3 → 12 cells.',
+    'Address lines k: 2<sup>k</sup> = number of words. 4 words → 2 address lines.',
+    '2 × 4 decoder with enable selects one word.',
+    'Memory enable = 0 → no word selected.',
+    'R/'+ov('W')+' = 1 → read. R/'+ov('W')+' = 0 → write.',
+    'Binary cell: 3 inputs (select, R/'+ov('W')+', input) and 1 output.',
+    'Simulator parts: 12 RAM cells, 9 OR gates, 7 bit switches, 3 bit displays, 1 decoder.',
+    'Note: the procedure in the manual mixes up read and write in its example. Follow the theory: 1 = read, 0 = write.'
+  ],
+  abbr:[['RAM','Random Access Memory'],['ROM','Read Only Memory'],['BC','Binary Cell'],['R/'+ov('W'),'Read / Write-bar (1 = read, 0 = write)'],['ME / EN','Memory Enable'],['m × n','m words of n bits each']]
+}
+];
+
+const VIVA = [
+  ['Why are NAND and NOR called universal gates?','Because any logic gate or Boolean function can be built using only NAND gates or only NOR gates.','01'],
+  ['What does LS mean in 74LS00?','Low-power Schottky. It is a TTL sub-family.','00'],
+  ['Which pins are V<sub>CC</sub> and GND on a 14-pin TTL IC?','Pin 14 = V<sub>CC</sub> (+5 V), pin 7 = GND.','00'],
+  ['What is the supply range of TTL ICs?','4.75 V to 5.25 V. Nominal 5 V.','00'],
+  ['Name the ICs for AND, OR, NOT, NAND, NOR, XOR.','7408, 7432, 7404, 7400, 7402, 7486.','00'],
+  ['Difference between half adder and full adder?','Half adder adds 2 bits (no carry input). Full adder adds 3 bits including carry-in.','02'],
+  ['Give sum and carry of a full adder.','S = A ⊕ B ⊕ C<sub>in</sub>, C<sub>out</sub> = AB + (A ⊕ B)C<sub>in</sub>.','02'],
+  ['Borrow of a half subtractor?','B<sub>out</sub> = '+A+'B.','02'],
+  ['How many NAND gates make a half adder / full adder?','5 for a half adder, 9 for a full adder.','02'],
+  ['How does the 7483 circuit subtract?',"M = 1 makes the XOR gates invert B and gives C<sub>in</sub> = 1, so A + B′ + 1 = A − B (2's complement).",'03'],
+  ['In subtraction, what does no end carry mean?',"The result is negative and in 2's complement form.",'03'],
+  ['V<sub>CC</sub> and GND pins of 7483?','V<sub>CC</sub> = pin 5, GND = pin 12.','03'],
+  ['What is a multiplexer?','A data selector: many inputs, one output, select lines choose the input.','04'],
+  ['How many select lines for a 16:1 MUX?','4, since 2<sup>4</sup> = 16.','04'],
+  ['Difference between DEMUX and decoder?','A decoder has no data input; a DEMUX routes a data input to the selected output.','04'],
+  ['What is a flip-flop?','A bistable multivibrator that stores 1 bit; the basic memory element.','05'],
+  ['What is the race-around condition?','In a JK flip-flop with J = K = 1, the output toggles many times during one clock pulse when pulse width > propagation delay.','05'],
+  ['How is race-around removed?','Using a master-slave JK flip-flop (or edge triggering).','05'],
+  ['Why is S = R = 1 not allowed?','Both outputs would go to the same level and the next state becomes unpredictable.','05'],
+  ['Convert JK to T and D.','T: tie J and K together. D: J = D, K = '+ov('D')+'.','05'],
+  ['What is a ripple counter?','An asynchronous counter where only the first flip-flop gets the clock and each output clocks the next.','06'],
+  ['Disadvantages of an asynchronous counter?','Propagation delay limits maximum frequency, and decoding glitches occur.','06'],
+  ['How many flip-flops for a mod-16 counter?','4 (2<sup>4</sup> = 16).','06'],
+  ['Synchronous vs asynchronous counter?','Synchronous: common clock to all FFs, faster. Asynchronous: clock only to the first FF, slower.','07'],
+  ['JK excitation table?','0→0: 0X, 0→1: 1X, 1→0: X1, 1→1: X0.','07'],
+  ['What is a shift register?','A group of flip-flops that stores data and shifts it one position per clock pulse.','08'],
+  ['Ring vs Johnson counter states (N flip-flops)?','Ring: N states. Johnson: 2N states.','08'],
+  ['Why is the Johnson counter called twisted ring?','Because the complemented output ('+Q+') of the last FF is fed back to the first.','08'],
+  ['Main drawback of ripple carry adder?','Carry propagation delay grows with the number of bits.','09'],
+  ['ALU select codes?','S1 S0: 00 AND, 01 OR, 10 XOR, 11 ADD.','10'],
+  ['How many cells and address lines in a 4 × 3 RAM?','12 cells, 2 address lines.','11'],
+  ['What does R/'+ov('W')+' = 1 do?','Read: the selected word is sent to the output.','11']
+];
+
+/* ---------- sim helpers ---------- */
+function split(val,N,p){const o={};for(let i=0;i<N;i++)o[p+i]=(val>>i)&1;return o;}
+function join(s,N,p){let v=0;for(let i=N-1;i>=0;i--)v=v*2+s[p+i];return v;}
+function applyJK(s,jk){const o={};for(let i=0;i<3;i++){const q=s['Q'+i],J=jk['J'+i],K=jk['K'+i];o['Q'+i]=J&&K?1-q:J?1:K?0:q;}return {s:o,msg:'J2K2='+jk.J2+jk.K2+'  J1K1='+jk.J1+jk.K1+'  J0K0='+jk.J0+jk.K0};}
+function rca(v){const c=[0],s=[];for(let i=0;i<4;i++){const a=v['A'+i],b=v['B'+i];s.push(a^b^c[i]);c.push((a&b)|((a^b)&c[i]));}return {s,c};}
+function alu(v){const a=num(v,'A',4),b=num(v,'B',4),op=v.S1*2+v.S0;if(op===0)return {f:a&b,c:0};if(op===1)return {f:a|b,c:0};if(op===2)return {f:a^b,c:0};const t=a+b+v.Ci;return {f:t&15,c:t>>4};}
+
+/* ---------- rendering ---------- */
+const rail = document.getElementById('rail');
+const main = document.getElementById('main');
+let current = 'exp00';
+let tab = store.get('tab','concept');
+let done = store.get('done',{});
+let selftest = store.get('selftest',false);
+if(selftest) document.body.classList.add('selftest');
+
+function renderRail(){
+  let h='<div class="rail-label">Experiments</div>';
+  EXPS.forEach(e=>{h+='<button class="chip'+(done[e.id]?' done':'')+'" data-go="'+e.id+'" aria-current="'+(current===e.id)+'"><span class="cid">EXP '+e.no+' · '+e.ics.slice(0,2).join(' ')+'</span><span class="cname">'+e.short+'</span><span class="dot"></span></button>';});
+  h+='<div class="rail-label">Quick revision</div>';
+  h+='<button class="chip util" data-go="abbr" aria-current="'+(current==='abbr')+'"><span class="cid">ALL · A–Z</span><span class="cname">Abbreviations</span><span class="dot"></span></button>';
+  h+='<button class="chip util" data-go="viva" aria-current="'+(current==='viva')+'"><span class="cid">'+VIVA.length+' CARDS</span><span class="cname">Viva Flashcards</span><span class="dot"></span></button>';
+  rail.innerHTML=h;
+  const c=Object.keys(done).filter(k=>done[k]).length;
+  document.getElementById('progTxt').textContent=c+' / '+EXPS.length+' revised';
+  document.getElementById('progBar').style.width=(c/EXPS.length*100)+'%';
+}
+rail.addEventListener('click',ev=>{const b=ev.target.closest('[data-go]');if(!b)return;go(b.dataset.go,true);});
+
+function go(id,scroll){
+  current=id;
+  try{history.replaceState(null,'','#'+id);}catch(e){}
+  renderRail();renderMain();
+  if(scroll && window.innerWidth<880) main.scrollIntoView({behavior:'smooth',block:'start'});
+  else if(scroll) window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function renderMain(){
+  if(current==='abbr') return renderAbbr();
+  if(current==='viva') return renderViva();
+  const e=EXPS.find(z=>z.id===current)||EXPS[0];
+  let h='<div class="exp-eyebrow"><span class="silk">Experiment '+e.no+' / 11</span>'+e.ics.map(i=>'<span class="ictag">'+(/^\d/.test(i)?'IC '+i:i)+'</span>').join('')+'</div>';
+  h+='<h2 class="exp-title">'+e.title+'</h2>';
+  h+='<div class="controls"><div class="tabs" role="tablist">'+
+    [['concept','1','Concept'],['exam','2','Exam answer'],['points','3','Points & abbr']].map(t=>'<button role="tab" data-tab="'+t[0]+'" aria-selected="'+(tab===t[0])+'"><span class="n">'+t[1]+'</span>'+t[2]+'</button>').join('')+
+    '</div><div class="toggles"><button class="tbtn" id="stBtn" aria-pressed="'+selftest+'"><span class="lamp"></span>Self-test: hide answers</button><button class="tbtn" id="doneBtn" aria-pressed="'+!!done[e.id]+'"><span class="lamp"></span>Mark revised</button></div></div>';
+  h+='<div id="tabBody"></div>';
+  main.innerHTML=h;
+  main.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;store.set('tab',tab);main.querySelectorAll('[data-tab]').forEach(z=>z.setAttribute('aria-selected',z===b));renderTab(e);});
+  document.getElementById('stBtn').onclick=function(){selftest=!selftest;store.set('selftest',selftest);document.body.classList.toggle('selftest',selftest);this.setAttribute('aria-pressed',selftest);main.querySelectorAll('.ans.shown').forEach(a=>a.classList.remove('shown'));};
+  document.getElementById('doneBtn').onclick=function(){done[e.id]=!done[e.id];store.set('done',done);this.setAttribute('aria-pressed',!!done[e.id]);renderRail();};
+  renderTab(e);
+}
+
+function renderTab(e){
+  const body=document.getElementById('tabBody');
+  if(tab==='concept'){
+    body.innerHTML='<div class="panel">'+
+      '<div class="lead-box"><span class="silk">In simple words · write this if you forget the definition</span><p>'+e.lead+'</p></div>'+
+      '<div><h3 class="sec">Key terms, in plain words</h3><dl class="terms">'+e.terms.map(t=>'<dt>'+t[0]+'</dt><dd>'+t[1]+'</dd>').join('')+'</dl></div>'+
+      '<div class="duo"><div class="note"><span class="silk">Picture it</span><p>'+e.picture+'</p></div><div class="note hook"><span class="silk">Memory hook</span><p>'+e.hook+'</p></div></div>'+
+      '<div><h3 class="sec">Try it on the trainer kit</h3><div id="benchHost"></div></div>'+
+    '</div>';
+    mountSim(document.getElementById('benchHost'),e.sim);
+  } else if(tab==='exam'){
+    body.innerHTML='<article class="exam"><div class="examhead"><b>Exam answer · Exp '+e.no+'</b><span class="silk">Write in this order</span></div>'+e.exam()+'</article>';
+    body.querySelectorAll('.ans').forEach(a=>a.addEventListener('click',()=>{if(selftest)a.classList.add('shown');}));
+  } else {
+    body.innerHTML='<div class="panel"><div><h3 class="sec">Key points to remember</h3><ul class="pts">'+e.points.map(p=>'<li>'+p+'</li>').join('')+'</ul></div>'+
+      '<div><h3 class="sec">Abbreviations</h3><table class="abbr"><tbody>'+e.abbr.map(a=>'<tr><td>'+a[0]+'</td><td>'+a[1]+'</td></tr>').join('')+'</tbody></table></div></div>';
+  }
+}
+
+function allAbbr(){
+  const m=new Map();
+  EXPS.forEach(e=>e.abbr.forEach(a=>{const k=a[0].replace(/<[^>]+>/g,'');if(!m.has(k))m.set(k,{k:a[0],v:a[1],from:[e.no]});else m.get(k).from.push(e.no);}));
+  [['K-map','Karnaugh map'],['MSB','Most Significant Bit'],['LSB','Least Significant Bit']].forEach(a=>{if(!m.has(a[0]))m.set(a[0],{k:a[0],v:a[1],from:[]});});
+  return [...m.entries()].sort((a,b)=>a[0].localeCompare(b[0],undefined,{sensitivity:'base'})).map(z=>z[1]);
+}
+function renderAbbr(){
+  const list=allAbbr();
+  main.innerHTML='<div class="exp-eyebrow"><span class="silk">Quick revision</span><span class="ictag">'+list.length+' terms</span></div><h2 class="exp-title">All Abbreviations</h2>'+
+    '<div class="controls"><input class="search" id="abSearch" type="search" placeholder="Search, e.g. SIPO or carry" aria-label="Search abbreviations"><span class="silk">Number = experiment where it appears</span></div>'+
+    '<table class="abbr" id="abTable"><tbody></tbody></table>';
+  const tb=main.querySelector('#abTable tbody');
+  const draw=q=>{q=(q||'').toLowerCase();tb.innerHTML=list.filter(a=>!q||(a.k+' '+a.v).replace(/<[^>]+>/g,'').toLowerCase().includes(q)).map(a=>'<tr><td>'+a.k+'</td><td>'+a.v+(a.from.length?' <span class="silk">· '+a.from.join(', ')+'</span>':'')+'</td></tr>').join('')||'<tr><td></td><td>No match. Try a shorter word.</td></tr>';};
+  draw('');
+  main.querySelector('#abSearch').addEventListener('input',ev=>draw(ev.target.value));
+}
+function renderViva(){
+  main.innerHTML='<div class="exp-eyebrow"><span class="silk">Quick revision</span><span class="ictag">'+VIVA.length+' questions</span></div><h2 class="exp-title">Viva Flashcards</h2>'+
+    '<div class="controls"><span class="silk">Say the answer out loud, then tap the card to check</span><div class="toggles"><button class="tbtn" id="openAll" aria-pressed="false"><span class="lamp"></span>Show all answers</button></div></div>'+
+    '<div class="cards">'+VIVA.map((c,i)=>'<button class="card" aria-expanded="false" data-i="'+i+'"><span class="tag">Exp '+c[2]+'</span><span class="q">'+c[0]+'</span><span class="a">'+c[1]+'</span><span class="hint">Tap to reveal</span></button>').join('')+'</div>';
+  main.querySelectorAll('.card').forEach(c=>c.onclick=()=>c.setAttribute('aria-expanded',c.getAttribute('aria-expanded')!=='true'));
+  main.querySelector('#openAll').onclick=function(){const on=this.getAttribute('aria-pressed')!=='true';this.setAttribute('aria-pressed',on);main.querySelectorAll('.card').forEach(c=>c.setAttribute('aria-expanded',on));};
+}
+
+/* ---------- simulators ---------- */
+function swHTML(k,val){return '<button class="sw" data-k="'+k+'" aria-pressed="'+!!val+'" aria-label="Input '+k.replace(/<[^>]+>/g,'')+'"><span class="lever"></span><span class="lab">'+lab(k)+'</span><span class="val">'+val+'</span></button>';}
+function ledHTML(name,val,hl){return '<div class="out"><span class="led'+(val?' on':'')+(hl?' hl':'')+'"></span><span class="lab">'+name+'</span></div>';}
+function outHTML(name,val){
+  if(typeof val==='number') return ledHTML(name,val);
+  if(val.bits) return '<div class="bus"><span class="busname">'+name+'</span><div class="leds">'+val.bits.map((b,i)=>ledHTML(val.names?val.names[i]:'',b,val.hl===i)).join('')+'</div></div>';
+  return '<div class="readout"><span class="k">'+name+'</span>'+val.text+'</div>';
+}
+function modeBar(sim,idx){return sim.modes.length>1?'<div class="modes">'+sim.modes.map((m,i)=>'<button data-m="'+i+'" aria-pressed="'+(i===idx)+'">'+m.label+'</button>').join('')+'</div>':'<div class="modes"><button aria-pressed="true">'+sim.modes[0].label+'</button></div>';}
+
+function mountSim(host,sim){
+  if(sim.type==='comb') return combSim(host,sim);
+  if(sim.type==='seq') return seqSim(host,sim);
+  if(sim.type==='ram') return ramSim(host);
+}
+
+function combSim(host,sim){
+  let idx=0,v={};
+  function reset(){v={};sim.modes[idx].inputs.forEach(k=>{if(k!=='|')v[k]=0;});}
+  reset();
+  function draw(){
+    const m=sim.modes[idx],ins=m.inputs.filter(k=>k!=='|');
+    const outs=m.outs.map(o=>[o[0],o[1](v)]);
+    const showTT=ins.length<=4 && outs.every(o=>typeof o[1]==='number');
+    let tH='';
+    if(showTT){
+      const N=ins.length,cur=ins.reduce((a,k)=>a*2+v[k],0);
+      tH='<div class="zone"><span class="silk">Truth table · tap a row to set the switches</span><div class="tt-wrap"><table class="tt"><thead><tr>'+ins.map(k=>'<th>'+lab(k)+'</th>').join('')+m.outs.map(o=>'<th class="o">'+o[0]+'</th>').join('')+'</tr></thead><tbody>';
+      for(let r=0;r<(1<<N);r++){const rv={};ins.forEach((k,i)=>rv[k]=(r>>(N-1-i))&1);tH+='<tr data-r="'+r+'"'+(r===cur?' class="cur"':'')+'>'+ins.map(k=>'<td>'+rv[k]+'</td>').join('')+m.outs.map(o=>'<td class="o">'+o[1](rv)+'</td>').join('')+'</tr>';}
+      tH+='</tbody></table></div></div>';
+    }
+    host.innerHTML='<div class="bench"><div class="bench-head"><span class="silk">Trainer kit · combinational</span>'+modeBar(sim,idx)+'</div>'+
+      '<div class="bench-body'+(showTT?'':' single')+'"><div><div class="zone"><span class="silk">Inputs · tap a switch</span><div class="row">'+m.inputs.map(k=>k==='|'?'<span class="gap"></span>':swHTML(k,v[k])).join('')+'</div></div>'+
+      '<div class="zone"><span class="silk">Outputs</span><div class="row">'+outs.map(o=>outHTML(o[0],o[1])).join('')+'</div>'+(m.note?'<div class="msg">'+m.note+'</div>':'')+'</div></div>'+tH+'</div></div>';
+    host.querySelectorAll('.sw').forEach(b=>b.onclick=()=>{v[b.dataset.k]^=1;draw();});
+    host.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{idx=+b.dataset.m;reset();draw();});
+    host.querySelectorAll('tr[data-r]').forEach(tr=>tr.onclick=()=>{const r=+tr.dataset.r,N=ins.length;ins.forEach((k,i)=>v[k]=(r>>(N-1-i))&1);draw();});
+  }
+  draw();
+}
+
+function seqSim(host,sim){
+  let idx=0,v={},s,hist=[],msg='',bad=false,busy=false;
+  function reset(){const m=sim.modes[idx];v={};m.inputs.forEach(k=>v[k]=0);s=m.init();hist=[stateStr()];msg='Ready. Press CLK to apply a clock pulse.';bad=false;}
+  function stateStr(){const m=sim.modes[idx];const b=m.bits.map(k=>s[k]).join('');return sim.decimal?b+' ('+parseInt(b,2)+')':b;}
+  function draw(){
+    const m=sim.modes[idx];
+    let outs=m.bits.map(k=>ledHTML(lab(k),s[k])).join('');
+    if(m.comp) outs+=ledHTML(Q,bad?1:1-s.Q);
+    let extra='';
+    if(m.jk){const jk=m.jk(s);extra='<div class="zone"><span class="silk">Gate logic → J K inputs for the next pulse</span><div class="row">'+['2','1','0'].map(i=>ledHTML('J'+i,jk['J'+i])+ledHTML('K'+i,jk['K'+i])+'<span class="gap"></span>').join('')+'</div></div>';}
+    if(sim.decimal) outs+='<div class="readout"><span class="k">Count</span>'+parseInt(m.bits.map(k=>s[k]).join(''),2)+'</div>';
+    const btns=(sim.buttons||[]).map((b,i)=>'<button class="btn ghost" data-b="'+i+'"'+(busy?' disabled':'')+'>'+b[0]+'</button>').join('');
+    host.innerHTML='<div class="bench"><div class="bench-head"><span class="silk">Trainer kit · sequential</span>'+modeBar(sim,idx)+'</div>'+
+      '<div class="bench-body single"><div>'+
+      (m.inputs.length?'<div class="zone"><span class="silk">Inputs · set them, then pulse the clock</span><div class="row">'+m.inputs.map(k=>swHTML(k,v[k])).join('')+'</div></div>':'')+
+      '<div class="zone"><span class="silk">Outputs</span><div class="row">'+outs+'</div><div class="msg'+(bad?' bad':'')+'">'+msg+'</div>'+(m.note?'<div class="msg">'+m.note+'</div>':'')+'</div>'+extra+
+      '<div class="zone"><div class="row" style="align-items:center"><button class="btn" id="clk"'+(busy?' disabled':'')+'>CLK ⎍ pulse</button>'+btns+'</div><div class="hist">'+hist.slice(-12).map(h=>'<span>'+h+'</span>').join('')+'</div></div>'+
+      '</div></div></div>';
+    host.querySelectorAll('.sw').forEach(b=>b.onclick=()=>{v[b.dataset.k]^=1;draw();});
+    host.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{if(busy)return;idx=+b.dataset.m;reset();draw();});
+    host.querySelector('#clk').onclick=pulse;
+    host.querySelectorAll('[data-b]').forEach(b=>b.onclick=()=>{const f=sim.buttons[+b.dataset.b][1];s=f?f():sim.modes[idx].init();bad=false;msg=sim.buttons[+b.dataset.b][0]+' applied';hist.push(stateStr());draw();});
+  }
+  function pulse(){
+    const m=sim.modes[idx];
+    const r=m.next(s,v);bad=!!r.bad;msg=r.msg||'';
+    const target=r.s;
+    const reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if(m.ripple&&!reduce){
+      busy=true;const order=m.bits.slice().reverse();let i=0;
+      const step=()=>{
+        while(i<order.length&&s[order[i]]===target[order[i]])i++;
+        if(i>=order.length){busy=false;hist.push(stateStr());msg=r.msg+' · bits changed one after another (ripple)';draw();return;}
+        s=Object.assign({},s,{[order[i]]:target[order[i]]});i++;msg='Rippling… '+order[i-1]+' changed';draw();setTimeout(step,170);
+      };
+      step();
+    } else {s=Object.assign({},target);hist.push(stateStr());draw();}
+  }
+  reset();draw();
+}
+
+function ramSim(host){
+  let mem=[[0,0,0],[1,0,1],[0,1,1],[0,0,0]],v={A1:0,A0:1,EN:1,RW:1,D2:1,D1:1,D0:0},out=[0,0,0],msg='Example data is pre-loaded. Set the switches and press APPLY.';
+  function draw(){
+    const a=v.A1*2+v.A0;
+    let grid='<div class="ramgrid"><span></span><span class="silk" style="color:var(--board-dim)">b2</span><span class="silk" style="color:var(--board-dim)">b1</span><span class="silk" style="color:var(--board-dim)">b0</span>';
+    mem.forEach((w,i)=>{grid+='<span class="w'+(v.EN&&i===a?' sel':'')+'">Word '+i+' ('+bstr(i,2)+')</span>'+w.map(b=>'<span class="led'+(b?' on':'')+'"></span>').join('');});
+    grid+='</div>';
+    host.innerHTML='<div class="bench"><div class="bench-head"><span class="silk">Trainer kit · 4 × 3 RAM</span><div class="modes"><button aria-pressed="true">Read / Write</button></div></div>'+
+      '<div class="bench-body"><div><div class="zone"><span class="silk">Address · Enable · R/W · Data in</span><div class="row">'+['A1','A0','|','EN','RW','|','D2','D1','D0'].map(k=>k==='|'?'<span class="gap"></span>':swHTML(k,v[k])).join('')+'</div>'+
+      '<div class="msg">Operation: '+(!v.EN?'none (memory disabled)':v.RW?'READ word '+a:'WRITE '+v.D2+v.D1+v.D0+' into word '+a)+'</div></div>'+
+      '<div class="zone"><span class="silk">Data out</span><div class="row">'+out.map((b,i)=>ledHTML('Q'+(2-i),b)).join('')+'<button class="btn" id="apply">APPLY</button></div><div class="msg">'+msg+'</div></div></div>'+
+      '<div class="zone"><span class="silk">12 binary cells · selected word highlighted</span>'+grid+'</div></div></div>';
+    host.querySelectorAll('.sw').forEach(b=>b.onclick=()=>{v[b.dataset.k]^=1;draw();});
+    host.querySelector('#apply').onclick=()=>{
+      const a2=v.A1*2+v.A0;
+      if(!v.EN){msg='Memory enable = 0 → decoder outputs all 0, no word selected.';out=[0,0,0];}
+      else if(v.RW){out=mem[a2].slice();msg='READ: word '+a2+' = '+out.join('')+' sent to output.';}
+      else {mem[a2]=[v.D2,v.D1,v.D0];out=[0,0,0];msg='WRITE: stored '+mem[a2].join('')+' in word '+a2+'. Set R/W = 1 to read it back.';}
+      draw();
+    };
+  }
+  draw();
+}
+
+/* ---------- boot ---------- */
+const h=(location.hash||'').slice(1);
+if(EXPS.some(e=>e.id===h)||h==='abbr'||h==='viva') current=h;
+renderRail();renderMain();
+})();
+</script>
+
+</body>
+</html>

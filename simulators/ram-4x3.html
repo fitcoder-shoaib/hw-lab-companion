@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>4×3 RAM – Interactive Models</title>
+<style>
+html,body{margin:0;height:100%;overflow:hidden;font-family:"Segoe UI",system-ui,sans-serif;background:#0f1419}
+#wrap{display:flex;flex-direction:column;height:100vh;height:100dvh}
+#tabs{display:flex;align-items:center;gap:6px;padding:6px 8px;background:#1b2330;border-bottom:1px solid #2c3a4d;flex:none}
+#tabs .name{color:#d8e1ea;font-weight:600;font-size:14px;margin-right:6px;white-space:nowrap}
+#tabs button{flex:0 1 auto;border:1px solid #3a4a60;background:#223042;color:#c7d2de;border-radius:6px;padding:7px 14px;font-size:13px;cursor:pointer;white-space:nowrap}
+#tabs button.on{background:#4fd1ff;color:#08202b;border-color:#4fd1ff;font-weight:600}
+iframe{flex:1;width:100%;border:0;display:none;background:#fff}
+iframe.on{display:block}
+@media (max-width:520px){#tabs .name{display:none}#tabs button{flex:1;padding:9px 6px}}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="tabs">
+    <span class="name">4×3 RAM</span>
+    <button id="t-vlab" onclick="showTab('vlab')">vlab layout</button>
+    <button id="t-simple" onclick="showTab('simple')">Simple model</button>
+  </div>
+  <iframe id="f-vlab" title="4x3 RAM - vlab layout"></iframe>
+  <iframe id="f-simple" title="4x3 RAM - simple model"></iframe>
+</div>
+<script type="text/plain" id="src-vlab"><!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>4×3 RAM – vlab (IIT KGP COA) layout</title>
+<style>
+:root{--bg:#ffffff;--panel:#f5f7fa;--line:#d5dce5;--text:#1d2733;--muted:#64748b;--one:#e8590c;--zero:#1f3b73;--plain:#1b1b1b;--hl:#0096ff;--chip:#7fae96;--chipb:#4d7f66}
+*{box-sizing:border-box}
+body{margin:0;background:#e9edf2;color:var(--text);font-family:"Segoe UI",system-ui,sans-serif;display:flex;height:100vh;overflow:hidden}
+#stage{flex:1;min-width:0;background:var(--bg)}
+svg#ram{width:100%;height:100%;display:block;user-select:none}
+#side{width:370px;background:var(--panel);border-left:1px solid var(--line);padding:14px 16px;overflow:auto;font-size:13px;line-height:1.45}
+h1{font-size:17px;margin:0 0 2px}
+h2{font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:16px 0 6px}
+a{color:#0a66c2}
+#status{padding:8px 10px;border-radius:6px;background:#fff;border:1px solid var(--line);font-family:Consolas,monospace;font-size:12.5px}
+#status b{color:var(--one)}
+button{background:#fff;color:var(--text);border:1px solid #b9c4d2;border-radius:5px;padding:5px 10px;cursor:pointer;font-size:12px}
+button:hover{background:#eef3f8}
+label.chk{display:inline-block;margin:6px 10px 0 0;font-size:12px;color:var(--muted);cursor:pointer}
+table{border-collapse:collapse}
+table.mem{font-family:Consolas,monospace}
+table.mem td,table.mem th{border:1px solid var(--line);padding:3px 9px;text-align:center;background:#fff}
+table.mem th{color:var(--muted);font-weight:normal}
+table.mem td.bit{cursor:pointer}
+table.mem td.bit.on{color:var(--one);font-weight:bold}
+table.mem tr.sel td{background:#dcefff}
+table.pins{width:100%;font-size:12px;margin-top:6px}
+table.pins td,table.pins th{border:1px solid var(--line);padding:2px 5px;background:#fff;text-align:left;vertical-align:top}
+table.pins th{color:var(--muted);font-weight:normal}
+table.pins tr.unused td{color:#a7b2c0}
+#info{background:#fff;border:1px solid var(--line);border-radius:6px;padding:9px 10px;min-height:80px}
+#info .t{font-weight:600;color:var(--hl);font-size:14px}
+#info ul{margin:4px 0 0;padding-left:18px}
+.v1{color:var(--one);font-weight:bold}.v0{color:var(--zero);font-weight:bold}
+.muted{color:var(--muted)}
+#internal svg{width:100%;background:#fff;border:1px solid var(--line);border-radius:6px}
+details.grp{background:#fff;border:1px solid var(--line);border-radius:6px;margin-bottom:6px}
+details.grp summary{cursor:pointer;padding:6px 9px;font-weight:600;font-size:12.5px}
+details.grp summary .cnt{float:right;color:var(--muted);font-weight:normal}
+.conn{display:flex;gap:6px;align-items:flex-start;padding:3px 9px;font-size:12px;border-top:1px solid #eef1f5;cursor:pointer}
+.conn:hover{background:#eaf5ff}
+.conn input{margin-top:2px}
+.conn.done span{color:#9aa6b4;text-decoration:line-through}
+.note{background:#fff8e6;border:1px solid #f0d9a0;border-radius:6px;padding:7px 9px;font-size:12px}
+
+/* SVG */
+.wire{fill:none;stroke:var(--plain);stroke-width:1.6;stroke-linejoin:round;transition:stroke .15s}
+svg.levels .wire{stroke:var(--zero)}
+svg.levels .wire.on{stroke:var(--one);stroke-width:2}
+.dot{fill:var(--plain)}
+svg.levels .dot{fill:var(--zero)} svg.levels .dot.on{fill:var(--one)}
+.hit{fill:none;stroke:transparent;stroke-width:11;cursor:pointer}
+svg.flow.levels .wire.on{stroke-dasharray:7 4;animation:dash .7s linear infinite}
+@keyframes dash{to{stroke-dashoffset:-11}}
+svg.focus .net:not(.hl){opacity:.12}
+svg.focus .comp:not(.hl){opacity:.3}
+.net.hl .wire{stroke-width:3.6;filter:drop-shadow(0 0 3px rgba(0,150,255,.9))}
+svg:not(.levels) .net.hl .wire{stroke:var(--hl)}
+.comp{cursor:pointer;transition:opacity .15s}
+.comp.hl .body{stroke:var(--hl)!important;stroke-width:2.6}
+.chipbody{fill:var(--chip);stroke:var(--chipb);stroke-width:1.2}
+.chip.sel .chipbody{fill:#9fd3e6;stroke:#1b84b5;stroke-width:2}
+.chipt{font-size:12px;fill:#163326;text-anchor:middle;pointer-events:none}
+.stub{stroke:#2a2a2a;stroke-width:1.4}
+.stub.unused{stroke:#a9b4ad}
+.pinno{font-size:7.5px;fill:#5b6b62;text-anchor:middle;pointer-events:none;display:none}
+svg.pins .pinno{display:block}
+.pinhit{fill:transparent;cursor:pointer}
+.pinhit:hover{fill:rgba(0,150,255,.35)}
+.lblbox{fill:#7fae96;stroke:#5b8c74}
+.lbltxt{font-size:11px;fill:#163326;text-anchor:middle;pointer-events:none}
+.togt{font-size:9px;font-weight:bold;text-anchor:middle;pointer-events:none;font-family:Consolas,monospace}
+.orb{fill:#1e88e5;stroke:#0d5aa7;stroke-width:1}
+.orb.on{fill:#ff8a3d;stroke:#c2410c}
+.disp{fill:#7fae96;stroke:#4d7f66}
+.digit{font-size:24px;font-family:Consolas,monospace;font-weight:bold;text-anchor:middle;pointer-events:none}
+.small{font-size:9px;fill:var(--muted)}
+
+/* mobile */
+#mini{display:none;position:fixed;left:8px;right:8px;bottom:8px;z-index:9;background:#fffffff2;border:1.5px solid var(--hl);border-radius:10px;padding:9px 12px;align-items:center;gap:10px;font-size:13px;box-shadow:0 4px 18px #0004}
+#mini .txt{flex:1;min-width:0}
+#mini .txt b{color:var(--hl)}
+.touch .hit{stroke-width:20}
+@media (max-width:820px){
+  body{flex-direction:column;height:auto;overflow:auto}
+  #stage{flex:none;overflow-x:auto;-webkit-overflow-scrolling:touch;border-bottom:1px solid var(--line)}
+  svg#ram{width:auto;height:auto;min-width:760px;aspect-ratio:900/760}
+  #side{width:100%;border-left:none;display:flex;flex-direction:column;padding:12px 14px 90px}
+  
+  #hint{display:block!important}
+  #mini.show{display:flex}
+  button{padding:9px 14px;font-size:14px}
+  table.mem td,table.mem th{padding:7px 14px;font-size:15px}
+  .conn{padding:7px 9px;font-size:13px}
+}
+
+/* sample walkthrough */
+#guide{pointer-events:none}
+.gring{fill:none;stroke-width:2.5;stroke-dasharray:4 3;animation:gpulse 1.2s ease-in-out infinite}
+@keyframes gpulse{50%{opacity:.3}}
+#gCard{border:1px solid var(--line);border-radius:6px;padding:8px 10px;margin:8px 0;font-size:12.5px}
+#gCard .gtitle{font-weight:600;font-size:13.5px;margin-bottom:3px}
+.gok{color:#16a34a;font-weight:bold}.gbad{color:#dc2626;font-weight:bold}
+.gnav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.gnav button:disabled{opacity:.4;cursor:default}
+table.samp{border-collapse:collapse;width:100%;font-size:11.5px;margin-bottom:6px}
+table.samp th,table.samp td{border:1px solid var(--line);padding:3px 4px;text-align:center}
+table.samp th{color:var(--muted);font-weight:normal;font-size:10.5px}
+table.samp td{white-space:nowrap}
+table.samp td:nth-child(2){text-align:left}
+table.samp tr[data-k]{cursor:pointer}
+table.samp tr[data-k]:hover td{background:rgba(0,150,255,.10)}
+table.samp tr.act td{background:rgba(124,58,237,.18)}
+#gbar{display:none;position:fixed;top:0;left:0;right:0;z-index:10;background:#7c3aed;color:#fff;padding:7px 8px;align-items:center;gap:8px;font-size:13px}
+#gbar .t{flex:1;min-width:0;text-align:center}
+#gbar button{background:#fff;color:#4c1d95;border:none;padding:6px 11px;font-weight:bold}
+#gbar .gok{color:#bbf7d0}
+@media (max-width:820px){#gbar.show{display:flex} body.gpad{padding-top:40px}}
+
+ul.tight{margin:0;padding-left:18px}ul.tight li{margin:2px 0}
+details#sMore{margin-top:16px;border:1px solid var(--line);border-radius:6px;padding:6px 10px}
+details#sMore summary{cursor:pointer;font-weight:600;color:var(--muted)}
+</style>
+</head>
+<body>
+<div id="gbar"><button id="gbPrev">◀</button><div class="t" id="gbarTxt"></div><button id="gbNext">▶</button><button id="gbExit">✕</button></div>
+
+<div id="hint" style="display:none;font-size:12px;color:#64748b;padding:6px 12px;background:#fff">Swipe sideways to see the whole circuit · tap any wire, pin or block to trace it</div>
+<div id="stage"><svg id="ram" viewBox="0 0 900 760" class="levels flow pins"></svg></div>
+<div id="mini"><div class="txt" id="miniTxt"></div><button id="miniMore">Details ↓</button></div>
+<div id="side">
+  <h1>4 × 3 RAM — vlab layout</h1>
+  <div class="muted intro">Matches the IIT KGP COA vlab, Experiment 11. <a href="#" onclick="parent.showTab&&parent.showTab('simple');return false">Other version →</a></div>
+  <div id="sBasic"><h2>Basic working</h2>
+  <ul class="tight">
+    <li><b>12 cells</b> = 4 words × 3 bits. Each cell stores one bit.</li>
+    <li><b>A B</b> choose the word (00 = W0, 01 = W1, 10 = W2, 11 = W3) through the decoder.</li>
+    <li><b>ME = 1</b> turns the memory on (ME = 0 → nothing works, output 000).</li>
+    <li><b>R/W = 0</b> writes D2 D1 D0 into the chosen word (output 000). <b>R/W = 1</b> reads that word onto the displays.</li>
+    <li><b>OR gates</b> join each column's 4 cell outputs into one display.</li>
+  </ul></div>
+  <div id="sConnect"><h2>How to connect (in vlab)</h2>
+  <table class="pins">
+    <tr><th>From</th><th>To</th></tr>
+    <tr><td>Switch A / B / ME</td><td>Dec pin 6 / 5 / 8</td></tr>
+    <tr><td>Dec pin 4 / 3 / 2 / 1</td><td>Pin 8 of the 3 RA cells in word 0 / 1 / 2 / 3</td></tr>
+    <tr><td>Switch R/W</td><td>Pin 6 of all 12 RA cells</td></tr>
+    <tr><td>Switch D2 / D1 / D0</td><td>Pin 5 of the 4 RA cells in that column</td></tr>
+    <tr><td>RA pin 4 of W0 + W1</td><td>One OR gate (per column)</td></tr>
+    <tr><td>RA pin 4 of W2 + W3</td><td>Second OR gate</td></tr>
+    <tr><td>Both OR outputs</td><td>Third OR gate → display</td></tr>
+  </table>
+  <div class="muted" style="margin-top:4px">Pin 1 = bottom-left corner (small circle), numbered anticlockwise. Read = R/W 1, write = R/W 0. In vlab, set address and data first, then flip R/W to 0.</div>
+  <details class="grp" style="margin-top:6px"><summary>Full wire checklist (<span id="ckCount"></span>)</summary><div style="padding:4px 8px"><button id="bResetCk" style="padding:2px 7px;margin-bottom:4px">reset ticks</button><div id="checklist"></div></div></details>
+  </div>
+  <div id="sSamples"><h2>Inputs &amp; expected output</h2>
+    <div class="muted"><b>Inputs:</b> switches A, B, ME, R/W (left) and D2 D1 D0 (top). <b>Output:</b> the 3 displays at the bottom. <button id="gWhere" style="padding:2px 8px">Show where</button></div>
+    <div id="gCard"></div>
+    <div class="gnav"><button id="gPrev">◀ Prev</button><button id="gNext">Start ▶</button><button id="gStop">Exit</button></div>
+    <table class="samp" id="gTable"></table>
+    <div class="muted">Do the steps in order. X = don't care.</div>
+  </div>
+  <div id="sStatus"><h2>Right now</h2><div id="status"></div></div>
+  <div id="sInspect"><h2>Tap a wire or block to see its connections</h2><div id="info"></div><div id="internal"></div></div>
+  <details id="sMore"><summary>Extra tools</summary>
+    <div id="sControls">
+    <button id="bClear">Clear memory</button>
+    <button id="bRand">Random memory</button><br>
+    <label class="chk"><input type="checkbox" id="cLevels" checked> colour wires by value</label>
+    <label class="chk"><input type="checkbox" id="cPins" checked> show pin numbers</label>
+    <label class="chk"><input type="checkbox" id="cFlow" checked> animate</label>
+    </div>
+    <div id="sMem"><h2>Memory contents (tap a bit to flip it)</h2><table class="mem" id="memtab"></table></div>
+  </details>
+</div>
+
+<script>
+const COLS=[400,560,720], ROWS=[160,270,380,490];
+const S={A:1,B:0,ME:1,RW:1,D:[1,0,1]};
+let M=[[0,1,0],[1,1,0],[1,0,1],[0,0,1]];
+const V={sel:[],out:[[],[],[],[]],ga:[],gb:[],y:[]};
+const bit=c=>2-c;
+let pinned=null,hover=null;
+
+function sim(){
+  const addr=S.A*2+S.B;
+  V.sel=[0,1,2,3].map(r=>S.ME&&addr===r?1:0);
+  for(let r=0;r<4;r++)for(let c=0;c<3;c++){
+    if(V.sel[r]&&!S.RW)M[r][c]=S.D[c];
+    V.out[r][c]=(V.sel[r]&&S.RW&&M[r][c])?1:0;
+  }
+  for(let c=0;c<3;c++){V.ga[c]=V.out[0][c]|V.out[1][c];V.gb[c]=V.out[2][c]|V.out[3][c];V.y[c]=V.ga[c]|V.gb[c];}
+}
+
+/* ---------- components ---------- */
+const PINFN={ra:{4:'Output',5:'Input',6:'R/W',8:'Select'},dec:{1:'D3',2:'D2',3:'D1',4:'D0',5:'B',6:'A',8:'Enable'}};
+const COMPS={};
+COMPS.dec={type:'dec',x:230,y:250,name:'Decoder with enable (Dec)',desc:'2×4 decoder. ME on pin 8 enables it; A (pin 6) and B (pin 5) pick which of D0–D3 goes high.'};
+ROWS.forEach((y,r)=>COLS.forEach((x,c)=>COMPS[`ra${r}${c}`]={type:'ra',x,y,cell:[r,c],name:`RA cell W${r}·b${bit(c)}`,desc:`Binary RAM cell storing bit ${bit(c)} of word ${r}.`}));
+[['A',170,'A','Address MSB → Dec pin 6'],['B',196,'B','Address LSB → Dec pin 5'],['ME',222,'ME','Memory enable → Dec pin 8'],['RW',600,'R/W','Read/Write → pin 6 of all 12 RA cells']]
+  .forEach(([k,y,l,d])=>COMPS[`sw_${k}`]={type:'sw',key:k,x:170,y,label:l,name:`Switch ${l}`,desc:d});
+COLS.forEach((x,c)=>{
+  COMPS[`sw_D${c}`]={type:'sw',key:'D'+c,x:x+76,y:40,label:`D${bit(c)}`,name:`Switch D${bit(c)} (data in)`,desc:`Data input bit ${bit(c)} → pin 5 of the 4 RA cells in this column.`};
+  COMPS[`ora${c}`]={type:'or',x:x+122,y:590,name:`OR gate (W0+W1), bit ${bit(c)}`,desc:'ORs the outputs of words 0 and 1.'};
+  COMPS[`orb${c}`]={type:'or',x:x+70,y:590,name:`OR gate (W2+W3), bit ${bit(c)}`,desc:'ORs the outputs of words 2 and 3.'};
+  COMPS[`orf${c}`]={type:'or',x:x+96,y:640,name:`Final OR gate, bit ${bit(c)}`,desc:'ORs the two OR gates above it. Only one cell per column can drive a 1, so this passes the selected word\'s bit.'};
+  COMPS[`disp${c}`]={type:'disp',x:x+96,y:682,name:`Display O${bit(c)}`,desc:`Shows output bit ${bit(c)}.`};
+});
+function pinXY(id,p){const c=COMPS[id];return p<=4?[c.x+8+16*(p-1),c.y+52]:[c.x+56-16*(p-5),c.y-8];}
+
+/* ---------- nets ---------- */
+const NETS=[];
+const net=o=>{NETS.push(o);return o;};
+net({id:'A',grp:0,name:'Address A',val:()=>S.A,segs:[[[178,170],[270,170],[270,242]]],dots:[],ends:[{c:'sw_A'},{c:'dec',p:6}]});
+net({id:'B',grp:0,name:'Address B',val:()=>S.B,segs:[[[178,196],[286,196],[286,242]]],dots:[],ends:[{c:'sw_B'},{c:'dec',p:5}]});
+net({id:'ME',grp:0,name:'Memory Enable',val:()=>S.ME,segs:[[[178,222],[238,222],[238,242]]],dots:[],ends:[{c:'sw_ME'},{c:'dec',p:8}]});
+const CH=[330,338,354,346];
+ROWS.forEach((ry,r)=>{
+  const p=4-r,[px]=pinXY('dec',p),ty=312+8*r,wy=ry-36;
+  const segs=[[[px,302],[px,ty],[CH[r],ty],[CH[r],wy],[COLS[2]+8,wy]]],dots=[],ends=[{c:'dec',p}];
+  COLS.forEach((x,c)=>{segs.push([[x+8,wy],[x+8,ry-8]]);if(c<2)dots.push([x+8,wy]);ends.push({c:`ra${r}${c}`,p:8});});
+  net({id:`W${r}`,grp:1,name:`Word line ${r} (Dec D${r}, pin ${p})`,val:()=>V.sel[r],segs,dots,ends});
+});
+(function(){
+  const segs=[[[178,600],[375,600],[375,ROWS[0]-26]]],dots=[],ends=[{c:'sw_RW'}];
+  ROWS.forEach((ry,r)=>{
+    segs.push([[375,ry-26],[COLS[2]+40,ry-26]]);if(r>0)dots.push([375,ry-26]);
+    COLS.forEach((x,c)=>{segs.push([[x+40,ry-26],[x+40,ry-8]]);if(c<2)dots.push([x+40,ry-26]);ends.push({c:`ra${r}${c}`,p:6});});
+  });
+  net({id:'RW',grp:2,name:'Read/Write line',val:()=>S.RW,segs,dots,ends});
+})();
+COLS.forEach((x,c)=>{
+  const segs=[[[x+76,48],[x+76,ROWS[3]-16]]],dots=[],ends=[{c:`sw_D${c}`}];
+  ROWS.forEach((ry,r)=>{segs.push([[x+76,ry-16],[x+56,ry-16],[x+56,ry-8]]);if(r<3)dots.push([x+76,ry-16]);ends.push({c:`ra${r}${c}`,p:5});});
+  net({id:`D${c}`,grp:3,name:`Data input D${bit(c)}`,val:()=>S.D[c],segs,dots,ends});
+});
+const ORIN=[['ora',2,572,128],['ora',1,580,116],['orb',2,580,76],['orb',1,572,64]]; // per row: gate, input#, elbow y, input x offset
+ROWS.forEach((ry,r)=>COLS.forEach((x,c)=>{
+  const lane=x+84+(3-r)*8,[g,inp,ey,gx]=ORIN[r];
+  net({id:`O${r}${c}`,grp:4,name:`Output of RA W${r}·b${bit(c)}`,val:()=>V.out[r][c],
+    segs:[[[x+56,ry+52],[x+56,ry+60],[lane,ry+60],[lane,ey],[x+gx,ey],[x+gx,590]]],dots:[],
+    ends:[{c:`ra${r}${c}`,p:4},{c:`${g}${c}`,p:'in'+inp}]});
+}));
+COLS.forEach((x,c)=>{
+  net({id:`GA${c}`,grp:5,name:`OR (W0+W1) output, bit ${bit(c)}`,val:()=>V.ga[c],segs:[[[x+122,612],[x+122,626],[x+102,626],[x+102,640]]],dots:[],ends:[{c:`ora${c}`,p:'out'},{c:`orf${c}`,p:'in2'}]});
+  net({id:`GB${c}`,grp:5,name:`OR (W2+W3) output, bit ${bit(c)}`,val:()=>V.gb[c],segs:[[[x+70,612],[x+70,626],[x+90,626],[x+90,640]]],dots:[],ends:[{c:`orb${c}`,p:'out'},{c:`orf${c}`,p:'in1'}]});
+  net({id:`Y${c}`,grp:6,name:`Data output O${bit(c)}`,val:()=>V.y[c],segs:[[[x+96,662],[x+96,682]]],dots:[],ends:[{c:`orf${c}`,p:'out'},{c:`disp${c}`}]});
+});
+const netOfPin=(cid,p)=>NETS.find(n=>n.ends.some(e=>e.c===cid&&e.p===p));
+const netsOfComp=id=>NETS.filter(n=>n.ends.some(e=>e.c===id));
+function endLabel(e){
+  const c=COMPS[e.c];
+  if(c.type==='ra'||c.type==='dec')return `${c.type==='ra'?'RA W'+c.cell[0]+'·b'+bit(c.cell[1]):'Dec'} pin ${e.p} (${PINFN[c.type][e.p]})`;
+  if(c.type==='or')return `${c.name} ${e.p==='out'?'output':'input '+e.p.slice(2)}`;
+  return c.name;
+}
+const GROUPS=['Switches → decoder','Decoder → RA Select (pin 8)','R/W switch → RA pin 6','Data switches → RA Input (pin 5)','RA Output (pin 4) → OR gates','OR gates → final OR','Final OR → displays'];
+
+/* ---------- drawing ---------- */
+const svg=document.getElementById('ram');
+const pd=pts=>'M'+pts.map(p=>p.join(',')).join(' L');
+function buildStatic(){
+  let h=`<defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M10 0H0V10" fill="none" stroke="#e2e6ea" stroke-width=".8"/></pattern></defs>
+  <rect width="900" height="760" fill="url(#grid)"/><g id="nets">`;
+  NETS.forEach(n=>{
+    h+=`<g class="net" data-net="${n.id}">`;
+    n.segs.forEach(s=>h+=`<path class="wire" d="${pd(s)}"/>`);
+    n.dots.forEach(d=>h+=`<circle class="dot" cx="${d[0]}" cy="${d[1]}" r="3"/>`);
+    n.segs.forEach(s=>h+=`<path class="hit" d="${pd(s)}"/>`);
+    h+='</g>';
+  });
+  svg.innerHTML=h+'</g><g id="comps"></g>';
+}
+function chip(id,label,extra){
+  const c=COMPS[id],{x,y,type}=c;
+  let h=`<g class="comp chip${extra||''}" data-comp="${id}"><rect class="chipbody body" x="${x}" y="${y}" width="64" height="44" rx="2"/>
+    <circle cx="${x+5}" cy="${y+39}" r="2.2" fill="none" stroke="#244a37"/>`;
+  for(let p=1;p<=8;p++){
+    const [px,py]=pinXY(id,p),used=PINFN[type][p],top=p>4;
+    h+=`<line class="stub${used?'':' unused'}" x1="${px}" y1="${top?y:y+44}" x2="${px}" y2="${py}"/>`;
+    h+=`<text class="pinno" x="${px+(p===1||p===8?-6:6)}" y="${top?y-1:y+51}">${p}</text>`;
+    if(used)h+=`<circle class="pinhit" cx="${px}" cy="${py}" r="5" data-pin="${p}"><title>${c.name} — pin ${p}: ${used}</title></circle>`;
+  }
+  return h+label+'</g>';
+}
+function sw(id){
+  const c=COMPS[id],v=c.key[0]==='D'&&c.key.length===2?S.D[+c.key[1]]:S[c.key],top=c.y<60;
+  const lb=top?`<rect class="lblbox" x="${c.x-14}" y="${c.y-30}" width="28" height="15"/><text class="lbltxt" x="${c.x}" y="${c.y-19}">${c.label}</text>`
+              :`<rect class="lblbox" x="${c.x-62}" y="${c.y-9}" width="${c.label.length>1?34:22}" height="18"/><text class="lbltxt" x="${c.x-62+(c.label.length>1?17:11)}" y="${c.y+4}">${c.label}</text>`;
+  return `<g class="comp" data-comp="${id}" data-tog="${c.key}">${lb}
+    <circle cx="${c.x}" cy="${c.y}" r="17" fill="transparent"/>
+    <circle class="body" cx="${c.x}" cy="${c.y}" r="8" fill="${v?'#f5b800':'#5fe0e6'}" stroke="#4b4b4b" stroke-width="1"/>
+    <text class="togt" x="${c.x}" y="${c.y+3}">${v}</text></g>`;
+}
+function orG(id,v){
+  const {x,y}=COMPS[id];
+  return `<g class="comp" data-comp="${id}"><path class="orb body${v?' on':''}" d="M${x-12},${y} Q${x},${y+7} ${x+12},${y} Q${x+12},${y+12} ${x},${y+22} Q${x-12},${y+12} ${x-12},${y} Z"><title>${COMPS[id].name}</title></path></g>`;
+}
+function drawComps(){
+  let h='';
+  ['sw_A','sw_B','sw_ME','sw_RW','sw_D0','sw_D1','sw_D2'].forEach(id=>h+=sw(id));
+  h+=chip('dec',`<text class="chipt" x="262" y="276">Dec.</text>`);
+  ROWS.forEach((y,r)=>{
+    h+=`<text class="small" x="${CH[r]+4}" y="${y-39}">Word ${r}</text>`;
+    COLS.forEach((x,c)=>{
+      const q=M[r][c];
+      h+=chip(`ra${r}${c}`,`<text class="chipt" x="${x+32}" y="${y+20}">RA</text>
+        <text x="${x+32}" y="${y+35}" text-anchor="middle" font-size="10" font-family="Consolas,monospace" fill="${q?'#b13a00':'#244a37'}" font-weight="bold" style="pointer-events:none">Q=${q}</text>`,V.sel[r]?' sel':'');
+    });
+  });
+  COLS.forEach((x,c)=>{
+    h+=orG(`ora${c}`,V.ga[c])+orG(`orb${c}`,V.gb[c])+orG(`orf${c}`,V.y[c]);
+    h+=`<g class="comp" data-comp="disp${c}"><rect class="disp body" x="${x+82}" y="682" width="28" height="38" rx="2"/>
+      <rect x="${x+86}" y="687" width="20" height="28" fill="#111"/>
+      <text class="digit" x="${x+96}" y="710" fill="#f5c000">${V.y[c]}</text></g>
+      <text class="small" x="${x+96}" y="734" text-anchor="middle">O${bit(c)}</text>`;
+  });
+  document.getElementById('comps').innerHTML=h;
+}
+function updateNets(){
+  NETS.forEach(n=>{const on=!!n.val();svg.querySelectorAll(`[data-net="${n.id}"] .wire,[data-net="${n.id}"] .dot`).forEach(e=>e.classList.toggle('on',on));});
+}
+
+/* ---------- inspector ---------- */
+const vb=v=>`<span class="v${v?1:0}">${v?1:0}</span>`;
+function applyFocus(){
+  const f=pinned||hover;
+  svg.classList.toggle('focus',!!f);
+  const fnet=f&&f.net?NETS.find(n=>n.id===f.net):null;
+  svg.querySelectorAll('.net').forEach(g=>{
+    const n=NETS.find(k=>k.id===g.dataset.net);
+    g.classList.toggle('hl',!!(f&&(f.net===n.id||(f.comp&&n.ends.some(e=>e.c===f.comp)))));
+  });
+  svg.querySelectorAll('.comp').forEach(g=>{
+    const id=g.dataset.comp;
+    g.classList.toggle('hl',!!(f&&(f.comp===id||(fnet&&fnet.ends.some(e=>e.c===id)))));
+  });
+  renderInfo(f);
+}
+function renderInfo(f){
+  renderMini(f);
+  const info=document.getElementById('info'),inner=document.getElementById('internal');
+  if(!f){info.innerHTML='<span class="muted">Hover or tap a wire, pin or block to see exactly what it connects to.</span>';inner.innerHTML='';return;}
+  const tag=pinned?' <span class="muted">(pinned)</span>':'';
+  if(f.net){
+    const n=NETS.find(k=>k.id===f.net);
+    info.innerHTML=`<div class="t">${n.name}</div>Value: ${vb(n.val())}${tag}
+      <div style="margin-top:6px"><b>From:</b> ${endLabel(n.ends[0])}</div>
+      <div class="muted">To ${n.ends.length-1} pin${n.ends.length>2?'s':''}:</div><ul>${n.ends.slice(1).map(e=>`<li>${endLabel(e)}</li>`).join('')}</ul>`;
+    inner.innerHTML='';return;
+  }
+  const c=COMPS[f.comp];
+  let h=`<div class="t">${c.name}</div>${tag}<div>${c.desc}</div>`;
+  if(c.type==='ra'||c.type==='dec'){
+    h+=`<table class="pins"><tr><th>Pin</th><th>Function</th><th>Connected to</th><th>Val</th></tr>`;
+    for(let p=1;p<=8;p++){
+      const fn=PINFN[c.type][p],n=fn&&netOfPin(f.comp,p);
+      if(!fn){h+=`<tr class="unused"><td>${p}</td><td colspan="3">not used</td></tr>`;continue;}
+      const others=n.ends.filter(e=>!(e.c===f.comp&&e.p===p));
+      const to=others.length>3?`${endLabel(others[0])} + ${others.length-1} more`:others.map(endLabel).join(', ');
+      h+=`<tr><td>${p}</td><td>${fn}</td><td>${to}</td><td>${vb(n.val())}</td></tr>`;
+    }
+    h+='</table>';
+  }else{
+    h+=`<div class="muted" style="margin-top:6px">Wires:</div><ul>${netsOfComp(f.comp).map(n=>`<li>${n.name} = ${vb(n.val())}</li>`).join('')}</ul>`;
+  }
+  info.innerHTML=h;
+  inner.innerHTML='';
+}
+function renderMini(f){
+  const m=document.getElementById('mini');
+  if(!pinned){m.classList.remove('show');return;}
+  const t=f.net?(n=>`<b>${n.name}</b> = ${vb(n.val())}<br><span class="muted">${endLabel(n.ends[0])} → ${n.ends.length-1} pin(s)</span>`)(NETS.find(n=>n.id===f.net))
+               :`<b>${COMPS[f.comp].name}</b><br><span class="muted">${netsOfComp(f.comp).length} wires attached</span>`;
+  document.getElementById('miniTxt').innerHTML=t;m.classList.add('show');
+}
+
+/* gate-level view of the RA cell (same logic as the lab manual figure) */
+function cellInternal(r,c){
+  const sel=V.sel[r],rw=S.RW,inp=S.D[c],q=M[r][c];
+  const nrw=rw?0:1,ninp=inp?0:1,s=sel&&nrw&&inp?1:0,rr=sel&&nrw&&ninp?1:0,out=V.out[r][c];
+  const col=v=>v?'#e8590c':'#8a9bb5';
+  const rails=[['Sel',30,sel],['R/W',55,rw],['R/W̅',80,nrw],['In',105,inp],['In̅',130,ninp]];
+  const rx=Object.fromEntries(rails.map(a=>[a[0],[a[1],a[2]]]));
+  const tap=(n,y,x2)=>`<line x1="${rx[n][0]}" y1="${y}" x2="${x2}" y2="${y}" stroke="${col(rx[n][1])}" stroke-width="2"/><circle cx="${rx[n][0]}" cy="${y}" r="3" fill="${col(rx[n][1])}"/>`;
+  const and=(x,y,v)=>`<path d="M${x},${y-20} H${x+20} A20 20 0 0 1 ${x+20},${y+20} H${x} Z" fill="${v?'#ffe3d0':'#e6eefb'}" stroke="${v?'#e8590c':'#1e5bb8'}" stroke-width="1.5"/><text x="${x+17}" y="${y+4}" font-size="10" fill="#334" text-anchor="middle">AND</text>`;
+  let h=`<div class="muted" style="margin:10px 0 4px">Inside RA W${r}·b${bit(c)} — pin 8 Select, pin 6 R/W, pin 5 In, pin 4 Out</div><svg viewBox="0 0 330 250">`;
+  rails.forEach(([n,x,v])=>h+=`<line x1="${x}" y1="34" x2="${x}" y2="${n.length>3?135:225}" stroke="${col(v)}" stroke-width="2"/><text x="${x}" y="14" fill="#334" font-size="10" text-anchor="middle">${n}</text><text x="${x}" y="27" fill="${col(v)}" font-size="10" font-weight="bold" text-anchor="middle">${v}</text>`);
+  h+=`<text x="67" y="45" font-size="8" fill="#889" text-anchor="middle">NOT</text><text x="117" y="45" font-size="8" fill="#889" text-anchor="middle">NOT</text>`;
+  h+=tap('Sel',48,160)+tap('R/W̅',60,160)+tap('In',72,160)+and(160,60,s)+`<line x1="200" y1="60" x2="230" y2="60" stroke="${col(s)}" stroke-width="2"/><text x="214" y="55" font-size="10" fill="${col(s)}">S</text>`;
+  h+=tap('Sel',108,160)+tap('R/W̅',120,160)+tap('In̅',132,160)+and(160,120,rr)+`<line x1="200" y1="120" x2="230" y2="120" stroke="${col(rr)}" stroke-width="2"/><text x="214" y="115" font-size="10" fill="${col(rr)}">R</text>`;
+  h+=`<rect x="230" y="40" width="60" height="100" rx="4" fill="#7fae96" stroke="#4d7f66"/><text x="260" y="80" font-size="11" fill="#163326" text-anchor="middle">SR latch</text><text x="260" y="104" font-size="18" font-weight="bold" fill="${q?'#b13a00':'#163326'}" text-anchor="middle">Q=${q}</text>`;
+  h+=`<path d="M290,90 H310 V165 H150 V222 H160" fill="none" stroke="${col(q)}" stroke-width="2"/>`;
+  h+=tap('Sel',198,160)+tap('R/W',210,160)+and(160,210,out)+`<line x1="200" y1="210" x2="300" y2="210" stroke="${col(out)}" stroke-width="2"/><text x="300" y="204" font-size="10" fill="${col(out)}" text-anchor="end">Out = ${out}</text></svg>`;
+  return h+`<div style="margin-top:4px">${!sel?'Not selected → holds its value, output 0.':rw?'Selected + READ → Out = Q.':'Selected + WRITE → latch copies In.'}</div>`;
+}
+
+/* ---------- side panel ---------- */
+function renderSide(){
+  const addr=S.A*2+S.B,st=document.getElementById('status');
+  if(!S.ME)st.innerHTML='ME = 0 → decoder disabled<br>No word selected, outputs = 000';
+  else if(S.RW)st.innerHTML=`<b>READ</b> address ${S.A}${S.B} (word ${addr})<br>Dec D${addr} → pin 8 of word ${addr}'s RA cells<br>Output O2 O1 O0 = <b>${V.y.join('')}</b>`;
+  else st.innerHTML=`<b>WRITE</b> address ${S.A}${S.B} (word ${addr})<br>D2 D1 D0 = ${S.D.join('')} stored in word ${addr}<br>Word ${addr} = <b>${M[addr].join('')}</b>, outputs = 000`;
+  let t='<tr><th>Word</th><th>Addr</th><th>b2</th><th>b1</th><th>b0</th></tr>';
+  M.forEach((w,r)=>t+=`<tr class="${V.sel[r]?'sel':''}"><td>W${r}</td><td>${r>>1}${r&1}</td>${w.map((b,c)=>`<td class="bit${b?' on':''}" data-r="${r}" data-c="${c}">${b}</td>`).join('')}</tr>`);
+  document.getElementById('memtab').innerHTML=t;
+}
+const CK_KEY='ram4x3-vlab-checks';
+let CK={};try{CK=JSON.parse(localStorage.getItem(CK_KEY)||'{}')}catch(e){}
+function buildChecklist(){
+  let h='',total=0;
+  GROUPS.forEach((g,gi)=>{
+    let rows='',n=0,d=0;
+    NETS.filter(x=>x.grp===gi).forEach(x=>x.ends.slice(1).forEach((e,i)=>{
+      const k=`${x.id}:${i}`;n++;if(CK[k])d++;
+      rows+=`<div class="conn${CK[k]?' done':''}" data-net="${x.id}"><input type="checkbox" data-k="${k}"${CK[k]?' checked':''}><span>${endLabel(x.ends[0])} → ${endLabel(e)}</span></div>`;
+    }));
+    total+=n;
+    h+=`<details class="grp"${gi===0?' open':''}><summary>${gi+1}. ${g}<span class="cnt">${d}/${n}</span></summary>${rows}</details>`;
+  });
+  const done=Object.values(CK).filter(Boolean).length;
+  document.getElementById('ckCount').textContent=`${done} of ${total} wires done`;
+  const open=[...document.querySelectorAll('#checklist details')].map(d=>d.open);
+  document.getElementById('checklist').innerHTML=h;
+  if(open.length)document.querySelectorAll('#checklist details').forEach((d,i)=>d.open=open[i]);
+}
+
+function refresh(){sim();drawComps();updateNets();renderSide();applyFocus();}
+
+/* ---------- events ---------- */
+const isTouch=matchMedia('(hover:none)').matches;
+if(isTouch)document.body.classList.add('touch');
+function targetOf(e){
+  const pin=e.target.closest('[data-pin]');
+  if(pin){const n=netOfPin(pin.closest('.comp').dataset.comp,+pin.dataset.pin);if(n)return{net:n.id};}
+  const n=e.target.closest('.net'),c=e.target.closest('.comp');
+  return n?{net:n.dataset.net}:c?{comp:c.dataset.comp}:null;
+}
+svg.addEventListener('mouseover',e=>{if(isTouch)return;hover=targetOf(e);if(!pinned)applyFocus();});
+svg.addEventListener('mouseleave',()=>{hover=null;if(!pinned)applyFocus();});
+svg.addEventListener('click',e=>{
+  const t=e.target.closest('[data-tog]');
+  if(t){const k=t.dataset.tog;if(k[0]==='D'&&k.length===2)S.D[+k[1]]^=1;else S[k]^=1;refresh();return;}
+  pinned=targetOf(e);applyFocus();
+});
+document.getElementById('memtab').addEventListener('click',e=>{const td=e.target.closest('td.bit');if(td){M[+td.dataset.r][+td.dataset.c]^=1;refresh();}});
+const cl=document.getElementById('checklist');
+cl.addEventListener('change',e=>{const k=e.target.dataset.k;if(!k)return;CK[k]=e.target.checked;try{localStorage.setItem(CK_KEY,JSON.stringify(CK))}catch(e){}buildChecklist();});
+cl.addEventListener('mouseover',e=>{const r=e.target.closest('.conn');if(isTouch||!r)return;hover={net:r.dataset.net};if(!pinned)applyFocus();});
+cl.addEventListener('mouseleave',()=>{hover=null;if(!pinned)applyFocus();});
+cl.addEventListener('click',e=>{const r=e.target.closest('.conn');if(!r||e.target.tagName==='INPUT')return;pinned={net:r.dataset.net};applyFocus();if(isTouch)document.getElementById('stage').scrollIntoView({behavior:'smooth'});});
+document.getElementById('bResetCk').onclick=()=>{CK={};try{localStorage.removeItem(CK_KEY)}catch(e){}buildChecklist();};
+document.getElementById('bClear').onclick=()=>{M=M.map(w=>w.map(()=>0));refresh();};
+document.getElementById('bRand').onclick=()=>{M=M.map(w=>w.map(()=>Math.random()<.5?1:0));refresh();};
+document.getElementById('cLevels').onchange=e=>svg.classList.toggle('levels',e.target.checked);
+document.getElementById('cPins').onchange=e=>svg.classList.toggle('pins',e.target.checked);
+document.getElementById('cFlow').onchange=e=>svg.classList.toggle('flow',e.target.checked);
+document.getElementById('miniMore').onclick=()=>document.getElementById('sInspect').scrollIntoView({behavior:'smooth',block:'start'});
+
+const GCFG={r:8,sw:{A:[170,170],B:[170,196],ME:[170,222],RW:[170,600],D0:[476,40],D1:[636,40],D2:[796,40]},leftTag:{dx:-68,dy:0,anchor:'end'},topTag:{dx:13,dy:0,anchor:'start'},disp:[[496,701,14,19],[656,701,14,19],[816,701,14,19]],dispTag:{dx:-20,anchor:'end'}};
+
+/* ---------- sample inputs & expected outputs (guided walkthrough) ---------- */
+const STEPS=[
+ {op:'Write 101 → W1',title:'Write 101 into word 1',ME:1,RW:0,A:0,B:1,D:[1,0,1],exp:'000',why:'R/W = 0 → write. 101 goes into word 1. Output stays 000.'},
+ {op:'Write 011 → W2',title:'Write 011 into word 2',ME:1,RW:0,A:1,B:0,D:[0,1,1],exp:'000',why:'011 goes into word 2.'},
+ {op:'Write 110 → W3',title:'Write 110 into word 3',ME:1,RW:0,A:1,B:1,D:[1,1,0],exp:'000',why:'110 goes into word 3.'},
+ {op:'Read W1',title:'Read word 1',ME:1,RW:1,A:0,B:1,D:[0,0,0],dx:1,exp:'101',why:'R/W = 1 → read. Word 1 shows on the displays.'},
+ {op:'Read W2',title:'Read word 2',ME:1,RW:1,A:1,B:0,D:[0,0,0],dx:1,exp:'011',why:'Word 2 shows.'},
+ {op:'Read W3',title:'Read word 3',ME:1,RW:1,A:1,B:1,D:[0,0,0],dx:1,exp:'110',why:'Word 3 shows.'},
+ {op:'Read W0',title:'Read word 0 (never written)',ME:1,RW:1,A:0,B:0,D:[0,0,0],dx:1,exp:'000',why:'Word 0 was never written → 000.'},
+ {op:'ME = 0, read',title:'Memory disabled (ME = 0)',ME:0,RW:1,A:0,B:1,D:[0,0,0],dx:1,exp:'000',why:'ME = 0 → memory off → 000.'},
+ {op:'ME = 0, write 111',title:'Try to write 111 with ME = 0',ME:0,RW:0,A:0,B:1,D:[1,1,1],exp:'000',why:'ME = 0 → nothing is stored.'},
+ {op:'Read W1 again',title:'Read word 1 again',ME:1,RW:1,A:0,B:1,D:[0,0,0],dx:1,exp:'101',why:'Still 101 (step 9 stored nothing).'},
+ {op:'Write 010 → W1',title:'Overwrite word 1 with 010',ME:1,RW:0,A:0,B:1,D:[0,1,0],exp:'000',why:'New value replaces the old one.'},
+ {op:'Read W1',title:'Read word 1 (new value)',ME:1,RW:1,A:0,B:1,D:[0,0,0],dx:1,exp:'010',why:'Word 1 now shows 010.'}
+];
+let gActive=null,gWhere=false;const gRes={};
+const SWKEYS=['A','B','ME','RW','D0','D1','D2'];
+const swName=k=>k==='RW'?'R/W':k[0]==='D'?'D'+(2-(+k[1])):k;
+const swVal=(o,k)=>k[0]==='D'&&k.length===2?o.D[+k[1]]:o[k];
+const stepMatches=s=>SWKEYS.every(k=>(s.dx&&k[0]==='D'&&k.length===2)||swVal(S,k)===swVal(s,k));
+function memBefore(k){const m=[[0,0,0],[0,0,0],[0,0,0],[0,0,0]];for(let i=0;i<k;i++){const s=STEPS[i];if(s.ME&&!s.RW)m[s.A*2+s.B]=[...s.D];}return m;}
+function loadStep(k,scroll){
+  const s=STEPS[k];M=memBefore(k);
+  S.ME=s.ME;S.RW=s.RW;S.A=s.A;S.B=s.B;S.D=[...s.D];gActive=k;refresh();
+  if(scroll&&matchMedia('(max-width:820px)').matches)document.getElementById('stage').scrollIntoView({behavior:'smooth'});
+}
+function gTag(x,y,text,color,anchor){
+  const w=text.length*6.4+12,rx=anchor==='end'?x-w:x;
+  return `<g><rect x="${rx}" y="${y-9}" width="${w}" height="18" rx="4" fill="${color}" opacity=".95"/><text x="${rx+w/2}" y="${y+4}" font-size="11" font-weight="bold" fill="#fff" text-anchor="middle" font-family="Segoe UI,sans-serif">${text}</text></g>`;
+}
+const ROLE={A:'Address A (MSB)',B:'Address B (LSB)',ME:'Memory enable',RW:'Read/Write',D0:'Data in D2',D1:'Data in D1',D2:'Data in D0'};
+function drawGuide(){
+  let g=document.getElementById('guide');
+  if(!g){g=document.createElementNS('http://www.w3.org/2000/svg','g');g.id='guide';svg.appendChild(g);}
+  let h='';const s=gActive!=null?STEPS[gActive]:null;
+  if(s||gWhere){
+    SWKEYS.forEach(k=>{
+      const [x,y]=GCFG.sw[k],top=k[0]==='D',L=top?GCFG.topTag:GCFG.leftTag;
+      let txt,col;
+      if(s){
+        const want=swVal(s,k),cur=swVal(S,k);
+        if(s.dx&&top){txt=`${swName(k)} = X`;col='#7b8794';}
+        else if(cur===want){txt=`${swName(k)} = ${want}`;col='#7c3aed';}
+        else{txt=`set ${swName(k)} = ${want}!`;col='#dc2626';}
+      }else{txt=ROLE[k];col='#0284c7';}
+      h+=`<circle class="gring" cx="${x}" cy="${y}" r="${GCFG.r+5}" stroke="${col}"/>`+gTag(x+L.dx,y+L.dy,txt,col,L.anchor);
+    });
+    GCFG.disp.forEach(([x,y,hw,hh],c)=>{
+      let txt,col;
+      if(s){const e=s.exp[c],a=String(V.y[c]);txt=`expect ${e}`;col=a===e?'#16a34a':'#dc2626';}
+      else{txt=`Output O${2-c}`;col='#0284c7';}
+      h+=`<rect class="gring" x="${x-hw-5}" y="${y-hh-5}" width="${2*hw+10}" height="${2*hh+10}" rx="5" stroke="${col}"/>`+gTag(x+GCFG.dispTag.dx,y,txt,col,GCFG.dispTag.anchor);
+    });
+  }
+  g.innerHTML=h;
+}
+function renderGuide(){
+  const N=STEPS.length,card=document.getElementById('gCard');
+  if(gActive!=null){
+    const s=STEPS[gActive],act=V.y.join(''),match=stepMatches(s);
+    if(match)gRes[gActive]=act===s.exp;
+    const mem=memBefore(gActive).map((w,r)=>`W${r}=${w.join('')}`).join('  ');
+    card.innerHTML=`<div class="gtitle">Step ${gActive+1} of ${N}: ${s.title}</div>
+      <div><b>Set inputs:</b> ME = ${s.ME}, R/W = ${s.RW} (${s.RW?'read':'write'}), A B = ${s.A} ${s.B}, D2 D1 D0 = ${s.dx?'X X X (ignored)':s.D.join(' ')}</div>
+      <div><b>Expected output</b> O2 O1 O0 = <b>${s.exp.split('').join(' ')}</b> &nbsp;·&nbsp; actual = <b>${act.split('').join(' ')}</b> ${match?(act===s.exp?'<span class="gok">✓ correct</span>':'<span class="gbad">✗ wrong</span>'):'<span class="gbad">switches differ from this step</span>'}</div>
+      <div class="muted" style="margin-top:4px">${s.why}</div>`;
+  }else card.innerHTML=`<div class="muted">Press <b>Start</b> to try the samples on the circuit, or tap a row.</div>`;
+  document.getElementById('gPrev').disabled=!(gActive>0);
+  document.getElementById('gNext').disabled=gActive===N-1;
+  document.getElementById('gNext').textContent=gActive==null?'Start ▶':'Next ▶';
+  document.getElementById('gStop').style.display=gActive==null?'none':'';
+  document.getElementById('gWhere').textContent=gWhere?'Hide labels':'Show where';
+  let t='<tr><th>#</th><th>Operation</th><th>ME</th><th>R/W</th><th>A B</th><th>D2 D1 D0</th><th>Expected O2 O1 O0</th></tr>';
+  STEPS.forEach((s,k)=>t+=`<tr class="${k===gActive?'act':''}" data-k="${k}"><td>${k+1}</td><td>${s.op}</td><td>${s.ME}</td><td>${s.RW}</td><td>${s.A} ${s.B}</td><td>${s.dx?'X X X':s.D.join(' ')}</td><td><b>${s.exp.split('').join(' ')}</b>${gRes[k]===true?' <span class="gok">✓</span>':gRes[k]===false?' <span class="gbad">✗</span>':''}</td></tr>`);
+  document.getElementById('gTable').innerHTML=t;
+  const bar=document.getElementById('gbar');
+  if(gActive!=null){const s=STEPS[gActive],ok=stepMatches(s)&&V.y.join('')===s.exp;
+    document.getElementById('gbarTxt').innerHTML=`<b>Step ${gActive+1}/${N}</b> ${s.op} · expect <b>${s.exp}</b> ${ok?'<span class="gok">✓</span>':''}`;bar.classList.add('show');}
+  else bar.classList.remove('show');
+}
+const _refreshBase=refresh;
+refresh=function(){_refreshBase();drawGuide();renderGuide();};
+document.getElementById('gTable').addEventListener('click',e=>{const r=e.target.closest('tr[data-k]');if(r)loadStep(+r.dataset.k,true);});
+const gGo=d=>loadStep(gActive==null?0:Math.min(STEPS.length-1,Math.max(0,gActive+d)));
+document.getElementById('gNext').onclick=()=>gGo(1);
+document.getElementById('gPrev').onclick=()=>gGo(-1);
+document.getElementById('gStop').onclick=()=>{gActive=null;refresh();};
+document.getElementById('gWhere').onclick=()=>{gWhere=!gWhere;refresh();};
+document.getElementById('gbPrev').onclick=()=>gGo(-1);
+document.getElementById('gbNext').onclick=()=>gGo(1);
+document.getElementById('gbExit').onclick=()=>{gActive=null;refresh();};
+
+new MutationObserver(()=>document.body.classList.toggle('gpad',document.getElementById('gbar').classList.contains('show'))).observe(document.getElementById('gbar'),{attributes:true});
+buildStatic();buildChecklist();refresh();
+<\/script>
+</body>
+</html>
+</script>
+<script type="text/plain" id="src-simple"><!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>4×3 RAM – Interactive Wiring Model</title>
+<style>
+:root{--bg:#0f1419;--panel:#161d26;--line:#253040;--low:#46546a;--high:#ffb020;--hl:#4fd1ff;--text:#d8e1ea;--muted:#8897a8;--cell:#24584a;--cellb:#3f8f76}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"Segoe UI",system-ui,sans-serif;display:flex;height:100vh;overflow:hidden}
+#stage{flex:1;min-width:0}
+svg#ram{width:100%;height:100%;display:block;user-select:none}
+#side{width:350px;background:var(--panel);border-left:1px solid var(--line);padding:14px 16px;overflow:auto;font-size:13px;line-height:1.45}
+h1{font-size:17px;margin:0 0 4px}
+h2{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:16px 0 6px}
+#status{padding:8px 10px;border-radius:6px;background:#0d1218;border:1px solid var(--line);font-family:Consolas,monospace;font-size:12.5px}
+#status b{color:var(--high)}
+button{background:#223042;color:var(--text);border:1px solid #33465e;border-radius:5px;padding:5px 10px;cursor:pointer;font-size:12px}
+button:hover{background:#2b3d55}
+label.chk{margin-left:6px;font-size:12px;color:var(--muted);cursor:pointer}
+table.mem{border-collapse:collapse;font-family:Consolas,monospace}
+table.mem td,table.mem th{border:1px solid var(--line);padding:3px 9px;text-align:center}
+table.mem th{color:var(--muted);font-weight:normal}
+table.mem td.bit{cursor:pointer}
+table.mem td.bit.on{color:var(--high);font-weight:bold}
+table.mem tr.sel td{background:#163447}
+#info{background:#0d1218;border:1px solid var(--line);border-radius:6px;padding:9px 10px;min-height:90px}
+#info .t{font-weight:600;color:var(--hl);font-size:14px}
+#info ul{margin:4px 0 0;padding-left:18px}
+.v1{color:var(--high);font-weight:bold}.v0{color:#8a99ad;font-weight:bold}
+.muted{color:var(--muted)}
+/* ---- mobile / narrow screens ---- */
+@media (max-width:820px){
+  body{flex-direction:column;height:auto;overflow:auto}
+  #stage{flex:none;overflow-x:auto;-webkit-overflow-scrolling:touch;border-bottom:1px solid var(--line)}
+  svg#ram{width:auto;height:auto;min-width:720px;aspect-ratio:1200/880}
+  #side{width:100%;border-left:none;display:flex;flex-direction:column;padding:12px 14px 30px}
+  
+  #hint{display:block!important}
+  #mini.show{display:flex}
+  #side{padding-bottom:80px}
+  button{padding:9px 14px;font-size:14px}
+  table.mem td,table.mem th{padding:7px 14px;font-size:15px}
+}
+#mini{display:none;position:fixed;left:8px;right:8px;bottom:8px;z-index:9;background:#0d1218f2;border:1px solid var(--hl);border-radius:10px;padding:9px 12px;align-items:center;gap:10px;font-size:13px;box-shadow:0 4px 18px #000a}
+#mini .txt{flex:1;min-width:0}
+#mini .txt b{color:var(--hl)}
+.touch .hit{stroke-width:22}
+#internal svg{width:100%;background:#0d1218;border:1px solid var(--line);border-radius:6px}
+
+/* SVG styling */
+.wire{fill:none;stroke:var(--low);stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round;transition:stroke .15s,opacity .15s}
+.wire.on{stroke:var(--high)}
+.dot{fill:var(--low)}.dot.on{fill:var(--high)}
+.hit{fill:none;stroke:transparent;stroke-width:12;cursor:pointer}
+svg.flow .wire.on{stroke-dasharray:9 5;animation:dash .7s linear infinite}
+@keyframes dash{to{stroke-dashoffset:-14}}
+svg.focus .net:not(.hl){opacity:.12}
+svg.focus .comp:not(.hl){opacity:.28}
+.net.hl .wire{stroke-width:4;stroke:var(--hl);filter:drop-shadow(0 0 4px rgba(79,209,255,.8))}
+.net.hl .wire.on{stroke:#ffd060;filter:drop-shadow(0 0 5px rgba(255,190,40,.9))}
+.net.hl .dot{fill:var(--hl)}.net.hl .dot.on{fill:#ffd060}
+.comp{cursor:pointer;transition:opacity .15s}
+.comp.hl rect,.comp.hl path.g{stroke:var(--hl)!important;stroke-width:2.5}
+.cellbox{fill:var(--cell);stroke:var(--cellb);stroke-width:1.5}
+.cell.sel .cellbox{stroke:#7fe3ff;stroke-width:2.5;fill:#1f6a7a}
+.pin{font-size:9px;fill:#bfe8dc}
+.qval{font-size:22px;font-weight:bold;fill:#9fb7ae;font-family:Consolas,monospace;text-anchor:middle}
+.qval.on{fill:var(--high)}
+.small{font-size:10px;fill:var(--muted)}
+.lbl{font-size:14px;fill:var(--text);font-weight:600}
+.tog{stroke:#0b0f14;stroke-width:2}
+.togt{font-size:12px;font-weight:bold;text-anchor:middle;pointer-events:none;font-family:Consolas,monospace}
+.decbox{fill:#2a4d63;stroke:#4f86a8;stroke-width:1.5}
+.g{fill:#1d3b5c;stroke:#4a8fd8;stroke-width:1.5}
+.g.on{fill:#5a4512;stroke:var(--high)}
+.disp{fill:#1b3a30;stroke:#3f8f76;stroke-width:1.5}
+.digit{font-size:34px;font-family:Consolas,monospace;font-weight:bold;text-anchor:middle}
+
+/* sample walkthrough */
+#guide{pointer-events:none}
+.gring{fill:none;stroke-width:2.5;stroke-dasharray:4 3;animation:gpulse 1.2s ease-in-out infinite}
+@keyframes gpulse{50%{opacity:.3}}
+#gCard{border:1px solid var(--line);border-radius:6px;padding:8px 10px;margin:8px 0;font-size:12.5px}
+#gCard .gtitle{font-weight:600;font-size:13.5px;margin-bottom:3px}
+.gok{color:#16a34a;font-weight:bold}.gbad{color:#dc2626;font-weight:bold}
+.gnav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.gnav button:disabled{opacity:.4;cursor:default}
+table.samp{border-collapse:collapse;width:100%;font-size:11.5px;margin-bottom:6px}
+table.samp th,table.samp td{border:1px solid var(--line);padding:3px 4px;text-align:center}
+table.samp th{color:var(--muted);font-weight:normal;font-size:10.5px}
+table.samp td{white-space:nowrap}
+table.samp td:nth-child(2){text-align:left}
+table.samp tr[data-k]{cursor:pointer}
+table.samp tr[data-k]:hover td{background:rgba(0,150,255,.10)}
+table.samp tr.act td{background:rgba(124,58,237,.18)}
+#gbar{display:none;position:fixed;top:0;left:0;right:0;z-index:10;background:#7c3aed;color:#fff;padding:7px 8px;align-items:center;gap:8px;font-size:13px}
+#gbar .t{flex:1;min-width:0;text-align:center}
+#gbar button{background:#fff;color:#4c1d95;border:none;padding:6px 11px;font-weight:bold}
+#gbar .gok{color:#bbf7d0}
+@media (max-width:820px){#gbar.show{display:flex} body.gpad{padding-top:40px}}
+
+ul.tight{margin:0;padding-left:18px}ul.tight li{margin:2px 0}
+details#sMore{margin-top:16px;border:1px solid var(--line);border-radius:6px;padding:6px 10px}
+details#sMore summary{cursor:pointer;font-weight:600;color:var(--muted)}
+</style>
+</head>
+<body>
+<div id="gbar"><button id="gbPrev">◀</button><div class="t" id="gbarTxt"></div><button id="gbNext">▶</button><button id="gbExit">✕</button></div>
+
+<div id="hint" style="display:none;font-size:12px;color:#8897a8;padding:6px 12px">Swipe sideways to see the whole circuit · tap any wire or block to trace it</div>
+<div id="stage"><svg id="ram" viewBox="0 0 1200 880" class="flow"></svg></div>
+<div id="mini"><div class="txt" id="miniTxt"></div><button id="miniMore">Details ↓</button></div>
+<div id="side">
+  <h1>4 × 3 RAM — interactive model</h1>
+  <div class="muted intro">4 words × 3 bits. <a href="#" style="color:#4fd1ff" onclick="parent.showTab&&parent.showTab('vlab');return false">vlab layout version →</a></div>
+  <div id="sBasic"><h2>Basic working</h2>
+  <ul class="tight">
+    <li><b>12 cells</b> = 4 words × 3 bits. Each cell stores one bit.</li>
+    <li><b>A B</b> choose the word (00 = W0, 01 = W1, 10 = W2, 11 = W3) through the decoder.</li>
+    <li><b>ME = 1</b> turns the memory on (ME = 0 → nothing works, output 000).</li>
+    <li><b>R/W = 0</b> writes D2 D1 D0 into the chosen word (output 000). <b>R/W = 1</b> reads that word onto the displays.</li>
+    <li><b>OR gates</b> join each column's 4 cell outputs into one display.</li>
+  </ul></div>
+  <div id="sConnect"><h2>How it is connected</h2>
+  <ul class="tight">
+    <li>A, B → decoder inputs; ME → decoder enable.</li>
+    <li>Decoder output W0–W3 → <b>Select</b> of the 3 cells in that word (row).</li>
+    <li>R/W → all 12 cells. D2 / D1 / D0 → <b>In</b> of the 4 cells in that column.</li>
+    <li>Cell <b>Out</b> → 2 OR gates per column → 1 OR gate → display.</li>
+  </ul></div>
+  <div id="sSamples"><h2>Inputs &amp; expected output</h2>
+    <div class="muted"><b>Inputs:</b> switches A, B, ME, R/W (left) and D2 D1 D0 (top). <b>Output:</b> the 3 displays at the bottom. <button id="gWhere" style="padding:2px 8px">Show where</button></div>
+    <div id="gCard"></div>
+    <div class="gnav"><button id="gPrev">◀ Prev</button><button id="gNext">Start ▶</button><button id="gStop">Exit</button></div>
+    <table class="samp" id="gTable"></table>
+    <div class="muted">Do the steps in order. X = don't care.</div>
+  </div>
+  <div id="sStatus"><h2>Right now</h2><div id="status"></div></div>
+  <div id="sInspect"><h2>Tap a wire or block to see its connections</h2><div id="info"></div><div id="internal"></div></div>
+  <details id="sMore"><summary>Extra tools</summary>
+    <div id="sControls">
+    <button id="bClear">Clear memory</button>
+    <button id="bRand">Random memory</button>
+    <label class="chk"><input type="checkbox" id="cFlow" checked> animate signals</label>
+    </div>
+    <div id="sMem"><h2>Memory contents (tap a bit to flip it)</h2><table class="mem" id="memtab"></table></div>
+  </details>
+</div>
+
+<script>
+const COLS=[470,710,950], ROWS=[170,310,450,590], CW=90, CH=64;
+const LANE=[161,149,111,99];               // x offset of each row's output lane (no self-crossings)
+const S={A:1,B:0,ME:1,RW:1,D:[1,0,1]};       // input switches; D[c] feeds column c (c=0 is bit 2)
+let M=[[0,1,0],[1,1,0],[1,0,1],[0,0,1]];     // M[word][column]
+const V={sel:[],out:[[],[],[],[]],ga:[],gb:[],y:[]};
+const bit=c=>2-c;
+let flow=true, pinned=null, hover=null;
+
+function sim(){
+  const addr=S.A*2+S.B;
+  V.sel=[0,1,2,3].map(r=>S.ME&&addr===r?1:0);
+  for(let r=0;r<4;r++)for(let c=0;c<3;c++){
+    if(V.sel[r]&&!S.RW) M[r][c]=S.D[c];
+    V.out[r][c]=(V.sel[r]&&S.RW&&M[r][c])?1:0;
+  }
+  for(let c=0;c<3;c++){V.ga[c]=V.out[2][c]|V.out[3][c];V.gb[c]=V.out[0][c]|V.out[1][c];V.y[c]=V.ga[c]|V.gb[c];}
+}
+
+/* ---------- nets (every wire, with what it connects) ---------- */
+const NETS=[];
+function net(o){NETS.push(o);return o;}
+const cellName=(r,c)=>`Cell W${r}·bit${bit(c)}`;
+net({id:'A',name:'Address line A (MSB)',val:()=>S.A,segs:[[[91,250],[210,250]]],dots:[],comps:['in_A','dec'],desc:'Most significant address bit into the decoder.'});
+net({id:'B',name:'Address line B (LSB)',val:()=>S.B,segs:[[[91,330],[210,330]]],dots:[],comps:['in_B','dec'],desc:'Least significant address bit into the decoder.'});
+net({id:'ME',name:'Memory Enable (ME)',val:()=>S.ME,segs:[[[91,450],[210,450]]],dots:[],comps:['in_ME','dec'],desc:'Goes to the decoder enable. When ME = 0 no word line is active, so nothing is read or written.'});
+(function(){
+  const segs=[[[91,678],[COLS[2]-12,678]],[[420,678],[420,ROWS[0]+88]]],dots=[[420,678]],comps=['in_RW'];
+  for(let r=0;r<4;r++){
+    const y=ROWS[r]+88;
+    if(r<3){segs.push([[420,y],[COLS[2]-12,y]]); if(r>0)dots.push([420,y]);}
+    COLS.forEach((x,c)=>{segs.push([[x-12,y],[x-12,ROWS[r]+48],[x,ROWS[r]+48]]);if(c<2)dots.push([x-12,y]);comps.push(`cell${r}${c}`);});
+  }
+  net({id:'RW',name:'Read/Write line (R/W)',val:()=>S.RW,segs,dots,comps,desc:'Shared by all 12 cells. 1 = read (cell drives its output), 0 = write (cell latches its input).'});
+})();
+COLS.forEach((x,c)=>{
+  const segs=[[[x-20,49],[x-20,ROWS[3]-15]]],dots=[],comps=[`in_D${c}`];
+  ROWS.forEach((y,r)=>{segs.push([[x-20,y-15],[x+30,y-15],[x+30,y]]);if(r<3)dots.push([x-20,y-15]);comps.push(`cell${r}${c}`);});
+  net({id:`D${c}`,name:`Data input D${bit(c)}`,val:()=>S.D[c],segs,dots,comps,desc:`Input bit ${bit(c)}. Runs down the column into the "In" pin of all 4 cells of bit ${bit(c)}; only the selected cell stores it during a write.`});
+});
+ROWS.forEach((y,r)=>{
+  const segs=[[[310,y-25],[COLS[2]-8,y-25]]],dots=[],comps=['dec'];
+  COLS.forEach((x,c)=>{segs.push([[x-8,y-25],[x-8,y+20],[x,y+20]]);if(c<2)dots.push([x-8,y-25]);comps.push(`cell${r}${c}`);});
+  net({id:`W${r}`,name:`Word line W${r} (decoder D${r})`,val:()=>V.sel[r],segs,dots,comps,desc:`Decoder output ${r} (address ${r>>1}${r&1}). Drives the "Select" pin of all 3 cells in word ${r}.`});
+});
+ROWS.forEach((y,r)=>COLS.forEach((x,c)=>{
+  const lx=x+LANE[r];
+  net({id:`O${r}${c}`,name:`Output of ${cellName(r,c)}`,val:()=>V.out[r][c],
+    segs:[[[x+60,y+CH],[x+60,y+74],[lx,y+74],[lx,705]]],dots:[],comps:[`cell${r}${c}`,r>=2?`ora${c}`:`orb${c}`],
+    desc:`Goes to OR gate ${r>=2?'A (words 2,3)':'B (words 0,1)'} of bit ${bit(c)}. It is 1 only when this cell is selected, R/W = 1 and it stores 1.`});
+}));
+COLS.forEach((x,c)=>{
+  net({id:`GA${c}`,name:`OR-A output, bit ${bit(c)}`,val:()=>V.ga[c],segs:[[[x+105,730],[x+105,745],[x+124,745],[x+124,760]]],dots:[],comps:[`ora${c}`,`orf${c}`],desc:'Word 2 OR word 3, into the final OR gate.'});
+  net({id:`GB${c}`,name:`OR-B output, bit ${bit(c)}`,val:()=>V.gb[c],segs:[[[x+155,730],[x+155,745],[x+136,745],[x+136,760]]],dots:[],comps:[`orb${c}`,`orf${c}`],desc:'Word 0 OR word 1, into the final OR gate.'});
+  net({id:`Y${c}`,name:`Data output O${bit(c)}`,val:()=>V.y[c],segs:[[[x+130,785],[x+130,800]]],dots:[],comps:[`orf${c}`,`disp${c}`],desc:`Final output bit ${bit(c)} shown on the display.`});
+});
+
+/* ---------- components ---------- */
+const COMPS={
+  in_A:{name:'Input switch A',desc:'Address MSB.'},in_B:{name:'Input switch B',desc:'Address LSB.'},
+  in_ME:{name:'Input switch ME',desc:'Memory Enable.'},in_RW:{name:'Input switch R/W',desc:'1 = Read, 0 = Write.'},
+  dec:{name:'2×4 Decoder with enable',desc:'Turns the 2-bit address (A,B) into one of four word lines W0–W3. If ME = 0, all outputs are 0.'}
+};
+COLS.forEach((_,c)=>{
+  COMPS[`in_D${c}`]={name:`Input switch D${bit(c)}`,desc:`Data bit ${bit(c)} to be written.`};
+  COMPS[`ora${c}`]={name:`OR gate A, bit ${bit(c)}`,desc:'ORs the outputs of words 2 and 3.'};
+  COMPS[`orb${c}`]={name:`OR gate B, bit ${bit(c)}`,desc:'ORs the outputs of words 0 and 1.'};
+  COMPS[`orf${c}`]={name:`Final OR gate, bit ${bit(c)}`,desc:'Combines OR-A and OR-B. Since only one cell per column can be active, this passes the selected word\'s bit.'};
+  COMPS[`disp${c}`]={name:`Output display O${bit(c)}`,desc:`Shows output bit ${bit(c)}.`};
+  ROWS.forEach((_,r)=>COMPS[`cell${r}${c}`]={name:cellName(r,c),desc:'Binary storage cell (SR latch + gates). Pins: Select, R/W, In, Out.',cell:[r,c]});
+});
+const netsOfComp=id=>NETS.filter(n=>n.comps.includes(id));
+
+/* ---------- drawing ---------- */
+const svg=document.getElementById('ram');
+const pd=pts=>'M'+pts.map(p=>p.join(',')).join(' L');
+function buildStatic(){
+  let h=`<defs><pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" fill="none" stroke="#18212b" stroke-width="1"/></pattern></defs>
+  <rect width="1200" height="880" fill="url(#grid)" data-bg="1"/>`;
+  h+='<g id="nets">';
+  NETS.forEach(n=>{
+    h+=`<g class="net" data-net="${n.id}">`;
+    n.segs.forEach(s=>h+=`<path class="wire" d="${pd(s)}"/>`);
+    n.dots.forEach(d=>h+=`<circle class="dot" cx="${d[0]}" cy="${d[1]}" r="3.6"/>`);
+    n.segs.forEach(s=>h+=`<path class="hit" d="${pd(s)}"/>`);
+    h+='</g>';
+  });
+  h+='</g><g id="comps"></g>';
+  svg.innerHTML=h;
+}
+function tog(id,x,y,v,label,sub,anchor){
+  return `<g class="comp" data-comp="${id}" data-tog="${id}">
+    <circle cx="${x}" cy="${y}" r="22" fill="transparent"/>
+    <circle class="tog" cx="${x}" cy="${y}" r="11" fill="${v?'#ffb020':'#3fd0c8'}"/>
+    <text class="togt" x="${x}" y="${y+4}" fill="#0b0f14">${v}</text>
+    <text class="lbl" x="${anchor==='mid'?x:x-18}" y="${anchor==='mid'?y-17:y+5}" text-anchor="${anchor==='mid'?'middle':'end'}">${label}</text>
+    ${sub?`<text class="small" x="${x-18}" y="${y+19}" text-anchor="end">${sub}</text>`:''}</g>`;
+}
+function orGate(id,x,y,v){
+  return `<g class="comp" data-comp="${id}"><path class="g${v?' on':''}" d="M${x-15},${y} Q${x},${y+8} ${x+15},${y} Q${x+15},${y+15} ${x},${y+25} Q${x-15},${y+15} ${x-15},${y} Z"/></g>`;
+}
+function drawComps(){
+  let h='';
+  h+=tog('in_A',80,250,S.A,'A');
+  h+=tog('in_B',80,330,S.B,'B');
+  h+=tog('in_ME',80,450,S.ME,'ME','enable');
+  h+=tog('in_RW',80,678,S.RW,'R/W',S.RW?'READ':'WRITE');
+  COLS.forEach((x,c)=>h+=tog(`in_D${c}`,x-20,38,S.D[c],`D${bit(c)}`,'', 'mid'));
+  // decoder
+  h+=`<g class="comp" data-comp="dec"><rect class="decbox" x="210" y="110" width="100" height="490" rx="6"/>
+    <text class="lbl" x="260" y="370" text-anchor="middle">2×4</text><text class="lbl" x="260" y="388" text-anchor="middle">Decoder</text>
+    <text class="pin" x="216" y="253">A1</text><text class="pin" x="216" y="333">A0</text><text class="pin" x="216" y="453">EN</text>`;
+  ROWS.forEach((y,r)=>h+=`<text class="pin" x="304" y="${y-22}" text-anchor="end" style="fill:${V.sel[r]?'#ffb020':'#bfe8dc'}">D${r}</text>`);
+  h+='</g>';
+  ROWS.forEach((y,r)=>h+=`<text class="small" x="430" y="${y-30}">W${r}</text>`);
+  // cells
+  ROWS.forEach((y,r)=>COLS.forEach((x,c)=>{
+    const q=M[r][c];
+    h+=`<g class="comp cell${V.sel[r]?' sel':''}" data-comp="cell${r}${c}">
+      <rect class="cellbox" x="${x}" y="${y}" width="${CW}" height="${CH}" rx="6"/>
+      <text class="pin" x="${x+30}" y="${y+11}" text-anchor="middle">In</text>
+      <text class="pin" x="${x+4}" y="${y+23}">Sel</text>
+      <text class="pin" x="${x+4}" y="${y+51}">R/W</text>
+      <text class="pin" x="${x+60}" y="${y+60}" text-anchor="middle">Out</text>
+      <text class="pin" x="${x+86}" y="${y+11}" text-anchor="end" style="fill:#8fc9b8">W${r}·b${bit(c)}</text>
+      <text class="qval${q?' on':''}" x="${x+60}" y="${y+43}">${q}</text>
+      <text class="pin" x="${x+40}" y="${y+40}" text-anchor="end" style="fill:#8fc9b8">Q=</text></g>`;
+  }));
+  // OR tree + displays
+  COLS.forEach((x,c)=>{
+    h+=orGate(`ora${c}`,x+105,705,V.ga[c])+orGate(`orb${c}`,x+155,705,V.gb[c])+orGate(`orf${c}`,x+130,760,V.y[c]);
+    h+=`<g class="comp" data-comp="disp${c}"><rect class="disp" x="${x+108}" y="${800}" width="44" height="54" rx="5"/>
+      <text class="digit" x="${x+130}" y="${840}" fill="${V.y[c]?'#ffb020':'#6f8a80'}">${V.y[c]}</text></g>
+      <text class="small" x="${x+130}" y="872" text-anchor="middle">O${bit(c)}</text>`;
+  });
+  document.getElementById('comps').innerHTML=h;
+}
+function updateNets(){
+  NETS.forEach(n=>{
+    const on=!!n.val();
+    svg.querySelectorAll(`[data-net="${n.id}"] .wire, [data-net="${n.id}"] .dot`).forEach(e=>e.classList.toggle('on',on));
+  });
+}
+
+/* ---------- focus / inspector ---------- */
+const vb=v=>`<span class="v${v?1:0}">${v?1:0}</span>`;
+function applyFocus(){
+  const f=pinned||hover;
+  svg.classList.toggle('focus',!!f);
+  svg.querySelectorAll('.net').forEach(g=>{
+    const n=NETS.find(k=>k.id===g.dataset.net);
+    g.classList.toggle('hl',!!(f&&(f.net===n.id||(f.comp&&n.comps.includes(f.comp)))));
+  });
+  const fnet=f&&f.net?NETS.find(n=>n.id===f.net):null;
+  svg.querySelectorAll('.comp').forEach(g=>{
+    const id=g.dataset.comp;
+    g.classList.toggle('hl',!!(f&&(f.comp===id||(fnet&&fnet.comps.includes(id)))));
+  });
+  renderInfo(f);
+}
+function renderMini(f){
+  const m=document.getElementById('mini');
+  if(!pinned){m.classList.remove('show');return;}
+  let t;
+  if(f.net){const n=NETS.find(k=>k.id===f.net);t=`<b>${n.name}</b> = ${vb(n.val())}<br><span class="muted">connects ${n.comps.length} blocks</span>`;}
+  else{const c=COMPS[f.comp];t=`<b>${c.name}</b><br><span class="muted">${netsOfComp(f.comp).length} wires attached</span>`;}
+  document.getElementById('miniTxt').innerHTML=t;m.classList.add('show');
+}
+function renderInfo(f){
+  renderMini(f);
+  const info=document.getElementById('info'),inner=document.getElementById('internal');
+  if(!f){info.innerHTML='<span class="muted">Hover a wire or block to see what it connects. Click to pin.</span>';inner.innerHTML='';return;}
+  if(f.net){
+    const n=NETS.find(k=>k.id===f.net);
+    info.innerHTML=`<div class="t">${n.name}</div>Value: ${vb(n.val())}${pinned?' <span class="muted">(pinned)</span>':''}<div>${n.desc}</div>
+      <div style="margin-top:6px" class="muted">Connects ${n.comps.length} blocks:</div><ul>${n.comps.map(c=>`<li>${COMPS[c].name}</li>`).join('')}</ul>`;
+    inner.innerHTML='';
+  }else{
+    const c=COMPS[f.comp],ns=netsOfComp(f.comp);
+    info.innerHTML=`<div class="t">${c.name}</div>${pinned?'<span class="muted">(pinned)</span>':''}<div>${c.desc}</div>
+      <div style="margin-top:6px" class="muted">Wires attached:</div><ul>${ns.map(n=>`<li>${n.name} = ${vb(n.val())}</li>`).join('')}</ul>`;
+    inner.innerHTML='';
+  }
+}
+
+/* gate-level view of one binary cell */
+function cellInternal(r,c){
+  const sel=V.sel[r],rw=S.RW,inp=S.D[c],q=M[r][c];
+  const nrw=rw?0:1,ninp=inp?0:1,s=sel&&nrw&&inp?1:0,rr=sel&&nrw&&ninp?1:0,out=V.out[r][c];
+  const col=v=>v?'#ffb020':'#56657a';
+  const rails=[['Sel',30,sel],['R/W',55,rw],['R/W̅',80,nrw],['In',105,inp],['In̅',130,ninp]];
+  const rx=Object.fromEntries(rails.map(a=>[a[0],a[1]]));
+  let h=`<div class="muted" style="margin:10px 0 4px">Inside ${cellName(r,c)}: S = Sel·R/W̅·In, R = Sel·R/W̅·In̅, Out = Sel·R/W·Q</div>
+  <svg viewBox="0 0 330 250">`;
+  rails.forEach(([n,x,v])=>{h+=`<line x1="${x}" y1="34" x2="${x}" y2="${n==='R/W̅'||n==='In̅'?135:225}" stroke="${col(v)}" stroke-width="2"/><text x="${x}" y="14" fill="#cfd8e2" font-size="10" text-anchor="middle">${n}</text><text x="${x}" y="27" fill="${col(v)}" font-size="10" font-weight="bold" text-anchor="middle">${v}</text>`;});
+  const tap=(rail,y,x2)=>`<line x1="${rx[rail]}" y1="${y}" x2="${x2}" y2="${y}" stroke="${col(rails.find(a=>a[0]===rail)[2])}" stroke-width="2"/><circle cx="${rx[rail]}" cy="${y}" r="3" fill="${col(rails.find(a=>a[0]===rail)[2])}"/>`;
+  const and=(x,y,v,lbl)=>`<path d="M${x},${y-20} H${x+20} A20 20 0 0 1 ${x+20},${y+20} H${x} Z" fill="${v?'#5a4512':'#1d3b5c'}" stroke="${v?'#ffb020':'#4a8fd8'}" stroke-width="1.5"/><text x="${x+17}" y="${y+4}" font-size="10" fill="#cfd8e2" text-anchor="middle">${lbl}</text>`;
+  // NOT markers
+  h+=`<text x="67" y="45" font-size="8" fill="#8897a8" text-anchor="middle">NOT</text><text x="117" y="45" font-size="8" fill="#8897a8" text-anchor="middle">NOT</text>`;
+  // AND S
+  h+=tap('Sel',48,160)+tap('R/W̅',60,160)+tap('In',72,160)+and(160,60,s,'AND');
+  h+=`<line x1="200" y1="60" x2="230" y2="60" stroke="${col(s)}" stroke-width="2"/><text x="214" y="55" font-size="10" fill="${col(s)}">S</text>`;
+  // AND R
+  h+=tap('Sel',108,160)+tap('R/W̅',120,160)+tap('In̅',132,160)+and(160,120,rr,'AND');
+  h+=`<line x1="200" y1="120" x2="230" y2="120" stroke="${col(rr)}" stroke-width="2"/><text x="214" y="115" font-size="10" fill="${col(rr)}">R</text>`;
+  // latch
+  h+=`<rect x="230" y="40" width="60" height="100" rx="5" fill="#24584a" stroke="#3f8f76"/><text x="260" y="80" font-size="11" fill="#cfd8e2" text-anchor="middle">SR latch</text>
+    <text x="260" y="104" font-size="18" font-weight="bold" fill="${col(q)}" text-anchor="middle">Q=${q}</text>`;
+  // Q to read AND
+  h+=`<path d="M290,90 H310 V165 H150 V222 H160" fill="none" stroke="${col(q)}" stroke-width="2"/>`;
+  h+=tap('Sel',198,160)+tap('R/W',210,160)+and(160,210,out,'AND');
+  h+=`<line x1="200" y1="210" x2="300" y2="210" stroke="${col(out)}" stroke-width="2"/><text x="300" y="204" font-size="10" fill="${col(out)}" text-anchor="end">Out = ${out}</text>`;
+  h+=`</svg>`;
+  const mode=!sel?'Not selected → cell holds its value, output 0.':rw?'Selected + READ → Out = Q.':'Selected + WRITE → latch copies In.';
+  return h+`<div style="margin-top:4px">${mode}</div>`;
+}
+
+/* ---------- side panel ---------- */
+function renderSide(){
+  const addr=S.A*2+S.B,word=M[addr].join('');
+  const st=document.getElementById('status');
+  if(!S.ME) st.innerHTML=`ME = 0 → memory <b>disabled</b><br>No word line active, outputs = 000`;
+  else if(S.RW) st.innerHTML=`<b>READ</b> address ${S.A}${S.B} (word ${addr})<br>W${addr} high → cells of word ${addr} drive OR tree<br>Output O2 O1 O0 = <b>${V.y.join('')}</b>`;
+  else st.innerHTML=`<b>WRITE</b> address ${S.A}${S.B} (word ${addr})<br>Input D2 D1 D0 = ${S.D.join('')} latched into word ${addr}<br>Word ${addr} now = <b>${word}</b>, outputs = 000`;
+  let t='<tr><th>Word</th><th>Addr</th><th>b2</th><th>b1</th><th>b0</th></tr>';
+  M.forEach((w,r)=>{t+=`<tr class="${V.sel[r]?'sel':''}"><td>W${r}</td><td>${r>>1}${r&1}</td>${w.map((b,c)=>`<td class="bit${b?' on':''}" data-r="${r}" data-c="${c}">${b}</td>`).join('')}</tr>`;});
+  document.getElementById('memtab').innerHTML=t;
+}
+
+function refresh(){sim();drawComps();updateNets();renderSide();applyFocus();}
+
+/* ---------- events ---------- */
+svg.addEventListener('mouseover',e=>{
+  if(document.body.classList.contains('touch'))return;
+  const n=e.target.closest('.net'),c=e.target.closest('.comp');
+  hover=n?{net:n.dataset.net}:c?{comp:c.dataset.comp}:null;
+  if(!pinned)applyFocus();
+});
+svg.addEventListener('mouseleave',()=>{hover=null;if(!pinned)applyFocus();});
+svg.addEventListener('click',e=>{
+  const t=e.target.closest('[data-tog]');
+  if(t){
+    const id=t.dataset.tog.slice(3);
+    if(id[0]==='D'&&id.length===2)S.D[+id[1]]^=1;else S[id]^=1;
+    refresh();return;
+  }
+  const n=e.target.closest('.net'),c=e.target.closest('.comp');
+  pinned=n?{net:n.dataset.net}:c?{comp:c.dataset.comp}:null;
+  applyFocus();
+});
+document.getElementById('memtab').addEventListener('click',e=>{
+  const td=e.target.closest('td.bit');if(!td)return;
+  M[+td.dataset.r][+td.dataset.c]^=1;refresh();
+});
+document.getElementById('bClear').onclick=()=>{M=M.map(w=>w.map(()=>0));refresh();};
+document.getElementById('bRand').onclick=()=>{M=M.map(w=>w.map(()=>Math.random()<.5?1:0));refresh();};
+document.getElementById('cFlow').onchange=e=>svg.classList.toggle('flow',e.target.checked);
+
+const isTouch=matchMedia('(hover:none)').matches;
+if(isTouch)document.body.classList.add('touch');
+document.getElementById('miniMore').onclick=()=>document.getElementById('sInspect').scrollIntoView({behavior:'smooth',block:'start'});
+const GCFG={r:11,sw:{A:[80,250],B:[80,330],ME:[80,450],RW:[80,678],D0:[450,38],D1:[690,38],D2:[930,38]},leftTag:{dx:-6,dy:30,anchor:'start'},topTag:{dx:16,dy:0,anchor:'start'},disp:[[600,827,22,27],[840,827,22,27],[1080,827,22,27]],dispTag:{dx:28,anchor:'start'}};
+
+/* ---------- sample inputs & expected outputs (guided walkthrough) ---------- */
+const STEPS=[
+ {op:'Write 101 → W1',title:'Write 101 into word 1',ME:1,RW:0,A:0,B:1,D:[1,0,1],exp:'000',why:'R/W = 0 → write. 101 goes into word 1. Output stays 000.'},
+ {op:'Write 011 → W2',title:'Write 011 into word 2',ME:1,RW:0,A:1,B:0,D:[0,1,1],exp:'000',why:'011 goes into word 2.'},
+ {op:'Write 110 → W3',title:'Write 110 into word 3',ME:1,RW:0,A:1,B:1,D:[1,1,0],exp:'000',why:'110 goes into word 3.'},
+ {op:'Read W1',title:'Read word 1',ME:1,RW:1,A:0,B:1,D:[0,0,0],dx:1,exp:'101',why:'R/W = 1 → read. Word 1 shows on the displays.'},
+ {op:'Read W2',title:'Read word 2',ME:1,RW:1,A:1,B:0,D:[0,0,0],dx:1,exp:'011',why:'Word 2 shows.'},
+ {op:'Read W3',title:'Read word 3',ME:1,RW:1,A:1,B:1,D:[0,0,0],dx:1,exp:'110',why:'Word 3 shows.'},
+ {op:'Read W0',title:'Read word 0 (never written)',ME:1,RW:1,A:0,B:0,D:[0,0,0],dx:1,exp:'000',why:'Word 0 was never written → 000.'},
+ {op:'ME = 0, read',title:'Memory disabled (ME = 0)',ME:0,RW:1,A:0,B:1,D:[0,0,0],dx:1,exp:'000',why:'ME = 0 → memory off → 000.'},
+ {op:'ME = 0, write 111',title:'Try to write 111 with ME = 0',ME:0,RW:0,A:0,B:1,D:[1,1,1],exp:'000',why:'ME = 0 → nothing is stored.'},
+ {op:'Read W1 again',title:'Read word 1 again',ME:1,RW:1,A:0,B:1,D:[0,0,0],dx:1,exp:'101',why:'Still 101 (step 9 stored nothing).'},
+ {op:'Write 010 → W1',title:'Overwrite word 1 with 010',ME:1,RW:0,A:0,B:1,D:[0,1,0],exp:'000',why:'New value replaces the old one.'},
+ {op:'Read W1',title:'Read word 1 (new value)',ME:1,RW:1,A:0,B:1,D:[0,0,0],dx:1,exp:'010',why:'Word 1 now shows 010.'}
+];
+let gActive=null,gWhere=false;const gRes={};
+const SWKEYS=['A','B','ME','RW','D0','D1','D2'];
+const swName=k=>k==='RW'?'R/W':k[0]==='D'?'D'+(2-(+k[1])):k;
+const swVal=(o,k)=>k[0]==='D'&&k.length===2?o.D[+k[1]]:o[k];
+const stepMatches=s=>SWKEYS.every(k=>(s.dx&&k[0]==='D'&&k.length===2)||swVal(S,k)===swVal(s,k));
+function memBefore(k){const m=[[0,0,0],[0,0,0],[0,0,0],[0,0,0]];for(let i=0;i<k;i++){const s=STEPS[i];if(s.ME&&!s.RW)m[s.A*2+s.B]=[...s.D];}return m;}
+function loadStep(k,scroll){
+  const s=STEPS[k];M=memBefore(k);
+  S.ME=s.ME;S.RW=s.RW;S.A=s.A;S.B=s.B;S.D=[...s.D];gActive=k;refresh();
+  if(scroll&&matchMedia('(max-width:820px)').matches)document.getElementById('stage').scrollIntoView({behavior:'smooth'});
+}
+function gTag(x,y,text,color,anchor){
+  const w=text.length*6.4+12,rx=anchor==='end'?x-w:x;
+  return `<g><rect x="${rx}" y="${y-9}" width="${w}" height="18" rx="4" fill="${color}" opacity=".95"/><text x="${rx+w/2}" y="${y+4}" font-size="11" font-weight="bold" fill="#fff" text-anchor="middle" font-family="Segoe UI,sans-serif">${text}</text></g>`;
+}
+const ROLE={A:'Address A (MSB)',B:'Address B (LSB)',ME:'Memory enable',RW:'Read/Write',D0:'Data in D2',D1:'Data in D1',D2:'Data in D0'};
+function drawGuide(){
+  let g=document.getElementById('guide');
+  if(!g){g=document.createElementNS('http://www.w3.org/2000/svg','g');g.id='guide';svg.appendChild(g);}
+  let h='';const s=gActive!=null?STEPS[gActive]:null;
+  if(s||gWhere){
+    SWKEYS.forEach(k=>{
+      const [x,y]=GCFG.sw[k],top=k[0]==='D',L=top?GCFG.topTag:GCFG.leftTag;
+      let txt,col;
+      if(s){
+        const want=swVal(s,k),cur=swVal(S,k);
+        if(s.dx&&top){txt=`${swName(k)} = X`;col='#7b8794';}
+        else if(cur===want){txt=`${swName(k)} = ${want}`;col='#7c3aed';}
+        else{txt=`set ${swName(k)} = ${want}!`;col='#dc2626';}
+      }else{txt=ROLE[k];col='#0284c7';}
+      h+=`<circle class="gring" cx="${x}" cy="${y}" r="${GCFG.r+5}" stroke="${col}"/>`+gTag(x+L.dx,y+L.dy,txt,col,L.anchor);
+    });
+    GCFG.disp.forEach(([x,y,hw,hh],c)=>{
+      let txt,col;
+      if(s){const e=s.exp[c],a=String(V.y[c]);txt=`expect ${e}`;col=a===e?'#16a34a':'#dc2626';}
+      else{txt=`Output O${2-c}`;col='#0284c7';}
+      h+=`<rect class="gring" x="${x-hw-5}" y="${y-hh-5}" width="${2*hw+10}" height="${2*hh+10}" rx="5" stroke="${col}"/>`+gTag(x+GCFG.dispTag.dx,y,txt,col,GCFG.dispTag.anchor);
+    });
+  }
+  g.innerHTML=h;
+}
+function renderGuide(){
+  const N=STEPS.length,card=document.getElementById('gCard');
+  if(gActive!=null){
+    const s=STEPS[gActive],act=V.y.join(''),match=stepMatches(s);
+    if(match)gRes[gActive]=act===s.exp;
+    const mem=memBefore(gActive).map((w,r)=>`W${r}=${w.join('')}`).join('  ');
+    card.innerHTML=`<div class="gtitle">Step ${gActive+1} of ${N}: ${s.title}</div>
+      <div><b>Set inputs:</b> ME = ${s.ME}, R/W = ${s.RW} (${s.RW?'read':'write'}), A B = ${s.A} ${s.B}, D2 D1 D0 = ${s.dx?'X X X (ignored)':s.D.join(' ')}</div>
+      <div><b>Expected output</b> O2 O1 O0 = <b>${s.exp.split('').join(' ')}</b> &nbsp;·&nbsp; actual = <b>${act.split('').join(' ')}</b> ${match?(act===s.exp?'<span class="gok">✓ correct</span>':'<span class="gbad">✗ wrong</span>'):'<span class="gbad">switches differ from this step</span>'}</div>
+      <div class="muted" style="margin-top:4px">${s.why}</div>`;
+  }else card.innerHTML=`<div class="muted">Press <b>Start</b> to try the samples on the circuit, or tap a row.</div>`;
+  document.getElementById('gPrev').disabled=!(gActive>0);
+  document.getElementById('gNext').disabled=gActive===N-1;
+  document.getElementById('gNext').textContent=gActive==null?'Start ▶':'Next ▶';
+  document.getElementById('gStop').style.display=gActive==null?'none':'';
+  document.getElementById('gWhere').textContent=gWhere?'Hide labels':'Show where';
+  let t='<tr><th>#</th><th>Operation</th><th>ME</th><th>R/W</th><th>A B</th><th>D2 D1 D0</th><th>Expected O2 O1 O0</th></tr>';
+  STEPS.forEach((s,k)=>t+=`<tr class="${k===gActive?'act':''}" data-k="${k}"><td>${k+1}</td><td>${s.op}</td><td>${s.ME}</td><td>${s.RW}</td><td>${s.A} ${s.B}</td><td>${s.dx?'X X X':s.D.join(' ')}</td><td><b>${s.exp.split('').join(' ')}</b>${gRes[k]===true?' <span class="gok">✓</span>':gRes[k]===false?' <span class="gbad">✗</span>':''}</td></tr>`);
+  document.getElementById('gTable').innerHTML=t;
+  const bar=document.getElementById('gbar');
+  if(gActive!=null){const s=STEPS[gActive],ok=stepMatches(s)&&V.y.join('')===s.exp;
+    document.getElementById('gbarTxt').innerHTML=`<b>Step ${gActive+1}/${N}</b> ${s.op} · expect <b>${s.exp}</b> ${ok?'<span class="gok">✓</span>':''}`;bar.classList.add('show');}
+  else bar.classList.remove('show');
+}
+const _refreshBase=refresh;
+refresh=function(){_refreshBase();drawGuide();renderGuide();};
+document.getElementById('gTable').addEventListener('click',e=>{const r=e.target.closest('tr[data-k]');if(r)loadStep(+r.dataset.k,true);});
+const gGo=d=>loadStep(gActive==null?0:Math.min(STEPS.length-1,Math.max(0,gActive+d)));
+document.getElementById('gNext').onclick=()=>gGo(1);
+document.getElementById('gPrev').onclick=()=>gGo(-1);
+document.getElementById('gStop').onclick=()=>{gActive=null;refresh();};
+document.getElementById('gWhere').onclick=()=>{gWhere=!gWhere;refresh();};
+document.getElementById('gbPrev').onclick=()=>gGo(-1);
+document.getElementById('gbNext').onclick=()=>gGo(1);
+document.getElementById('gbExit').onclick=()=>{gActive=null;refresh();};
+
+new MutationObserver(()=>document.body.classList.toggle('gpad',document.getElementById('gbar').classList.contains('show'))).observe(document.getElementById('gbar'),{attributes:true});
+buildStatic();refresh();
+<\/script>
+</body>
+</html>
+</script>
+<script>
+const loaded={};
+function showTab(t){
+  if(t!=='vlab'&&t!=='simple')t='vlab';
+  ['vlab','simple'].forEach(k=>{
+    document.getElementById('t-'+k).classList.toggle('on',k===t);
+    document.getElementById('f-'+k).classList.toggle('on',k===t);
+  });
+  if(!loaded[t]){loaded[t]=1;document.getElementById('f-'+t).srcdoc=document.getElementById('src-'+t).textContent.split('<'+String.fromCharCode(92)+'/script').join('</'+'script');}
+  if(location.hash!=='#'+t)history.replaceState(null,'','#'+t);
+}
+showTab(location.hash.slice(1));
+</script>
+</body>
+</html>

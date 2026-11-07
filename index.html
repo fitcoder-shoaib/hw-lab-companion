@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HW Lab Companion</title>
+<meta name="description" content="Free study kit for the Digital Hardware Lab: a detailed exam guide, a quick theory bench with viva flashcards, and an interactive 4×3 RAM simulator. Works in any browser, no install.">
+<meta property="og:title" content="HW Lab Companion">
+<meta property="og:description" content="Exam guide, viva flashcards and an interactive 4×3 RAM simulator for all 12 Digital Hardware Lab experiments.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="docs/images/social-preview.png">
+<meta name="theme-color" content="#0D1511">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='7' y='4' width='18' height='24' rx='2' fill='%2317221C'/%3E%3Cg fill='%23B4B8BD'%3E%3Crect x='3' y='8' width='4' height='2'/%3E%3Crect x='3' y='15' width='4' height='2'/%3E%3Crect x='3' y='22' width='4' height='2'/%3E%3Crect x='25' y='8' width='4' height='2'/%3E%3Crect x='25' y='15' width='4' height='2'/%3E%3Crect x='25' y='22' width='4' height='2'/%3E%3C/g%3E%3Ccircle cx='16' cy='8' r='2' fill='%23DE9B56'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F3F6F2; --paper-2:#E6ECE6; --surface:#FBFCFA;
+  --ink:#17221C; --ink-2:#536359; --rule:#C9D3CB;
+  --accent:#1E5C3A; --accent-soft:#D5E7DA; --on-accent:#FFFFFF;
+  --copper:#975515; --copper-soft:#F1E2CF;
+  --chip:#1D1F22; --chip-ink:#E8E8E4; --pin:#B4B8BD;
+  --f-display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#0D1511; --paper-2:#15211A; --surface:#121D17;
+  --ink:#DBE5DE; --ink-2:#93A59A; --rule:#2A3B31;
+  --accent:#63C88E; --accent-soft:#1C3828; --on-accent:#0D1511;
+  --copper:#DE9B56; --copper-soft:#3A2915;
+  --chip:#050607; --chip-ink:#E6E6E2; --pin:#7E8287;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0D1511; --paper-2:#15211A; --surface:#121D17;
+  --ink:#DBE5DE; --ink-2:#93A59A; --rule:#2A3B31;
+  --accent:#63C88E; --accent-soft:#1C3828; --on-accent:#0D1511;
+  --copper:#DE9B56; --copper-soft:#3A2915;
+  --chip:#050607; --chip-ink:#E6E6E2; --pin:#7E8287;
+  color-scheme:dark}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.6}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--copper);outline-offset:2px}
+.wrap{max-width:1120px;margin:0 auto;padding:28px 16px 64px}
+
+/* header */
+.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--copper);font-weight:600}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(44px,9vw,84px);line-height:.95;margin:10px 0 14px;letter-spacing:.005em;text-transform:uppercase}
+.lead{max-width:640px;color:var(--ink-2);font-size:17px;margin:0}
+.hero{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:end;padding-bottom:22px;border-bottom:3px double var(--rule)}
+.stats{font-family:var(--f-mono);font-size:13px;color:var(--ink-2);text-align:right;line-height:1.9}
+.stats b{color:var(--ink);font-weight:600}
+.topbar{display:flex;justify-content:flex-end;gap:8px;margin-bottom:18px}
+.btn{font:500 13px var(--f-body);border:1px solid var(--rule);background:var(--surface);color:var(--ink);border-radius:6px;padding:6px 12px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{border-color:var(--accent)}
+@media (max-width:720px){.hero{grid-template-columns:1fr}.stats{text-align:left}}
+
+/* section heads */
+.part{font-family:var(--f-mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2);margin:44px 0 6px}
+h2{font-family:var(--f-display);font-size:34px;text-transform:uppercase;margin:0 0 18px;line-height:1}
+
+/* tool cards */
+.tools{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media (max-width:900px){.tools{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--rule);border-radius:10px;overflow:hidden;display:flex;flex-direction:column;text-decoration:none;color:inherit;transition:border-color .15s,transform .15s}
+.card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.card img{width:100%;aspect-ratio:16/10;object-fit:cover;object-position:top left;display:block;border-bottom:1px solid var(--rule);background:var(--paper-2)}
+.card .body{padding:16px 18px 18px;display:flex;flex-direction:column;gap:8px;flex:1}
+.tag{font-family:var(--f-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--copper);font-weight:600}
+.card h3{font-family:var(--f-display);font-size:26px;text-transform:uppercase;margin:0;line-height:1}
+.card p{margin:0;color:var(--ink-2);font-size:14.5px}
+.card ul{margin:2px 0 0;padding-left:18px;font-size:14px;color:var(--ink-2)}
+.card .go{margin-top:auto;padding-top:8px;font-weight:600;color:var(--accent);font-size:14px}
+
+/* steps */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;counter-reset:s}
+@media (max-width:900px){.steps{grid-template-columns:1fr}}
+.step{border-top:2px solid var(--accent);padding-top:12px}
+.step h3{margin:0 0 4px;font-size:16px}
+.step h3::before{counter-increment:s;content:"0" counter(s) "  ";font-family:var(--f-mono);color:var(--copper);font-weight:600}
+.step p{margin:0;color:var(--ink-2);font-size:14.5px}
+
+/* experiment table */
+.tablewrap{overflow-x:auto;border:1px solid var(--rule);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14.5px;min-width:620px}
+th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--rule);vertical-align:top}
+tr:last-child td{border-bottom:0}
+th{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);font-weight:500;background:var(--paper-2)}
+td.no{font-family:var(--f-mono);color:var(--copper);font-weight:600;width:44px}
+td.ics{font-family:var(--f-mono);font-size:12.5px;color:var(--ink-2)}
+td.links{white-space:nowrap}
+td.links a{font-size:13px;font-weight:600;text-decoration:none;border:1px solid var(--rule);border-radius:5px;padding:3px 8px;margin-right:4px;display:inline-block}
+td.links a:hover{border-color:var(--accent);background:var(--accent-soft)}
+.pill{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;background:var(--copper-soft);color:var(--copper);border-radius:4px;padding:1px 6px;margin-left:6px;vertical-align:2px;white-space:nowrap}
+.part-row td{background:var(--paper-2);font-family:var(--f-mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);padding:7px 14px}
+
+.note{border:1px dashed var(--copper);background:var(--copper-soft);border-radius:8px;padding:14px 16px;font-size:14.5px;margin-top:20px}
+.note b{color:var(--copper)}
+footer{margin-top:56px;padding-top:18px;border-top:1px solid var(--rule);font-size:13.5px;color:var(--ink-2);display:flex;flex-wrap:wrap;gap:8px 24px;justify-content:space-between}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <a class="btn" href="https://github.com/YOUR-USERNAME/hw-lab-companion">★ GitHub</a>
+    <button class="btn" id="theme" type="button" aria-label="Toggle light or dark theme">◐ Theme</button>
+  </div>
+
+  <header class="hero">
+    <div>
+      <div class="eyebrow">Digital Hardware Lab · Study kit</div>
+      <h1>HW Lab Companion</h1>
+      <p class="lead">Everything I wish I had before the lab exam. A full exam guide, a quick revision bench with viva flashcards, and an interactive 4×3 RAM you can wire up and test. Opens in any browser. Nothing to install.</p>
+    </div>
+    <div class="stats">
+      <b>12</b> experiments<br>
+      <b>13</b> IC pin diagrams<br>
+      <b>90+</b> viva questions<br>
+      <b>0</b> installs needed
+    </div>
+  </header>
+
+  <div class="part">Part A · The tools</div>
+  <h2>Pick your tool</h2>
+  <div class="tools">
+    <a class="card" href="guides/exam-guide.html">
+      <img src="docs/images/exam-guide.png" alt="Screenshot of the HW Lab Exam Guide" loading="lazy">
+      <div class="body">
+        <span class="tag">Detailed · read first</span>
+        <h3>Exam Guide</h3>
+        <p>Every experiment written the way examiners want it.</p>
+        <ul>
+          <li>Aim, components, theory, procedure, result</li>
+          <li>Live circuits: tap an input, watch the wires</li>
+          <li>Truth tables, K-maps, IC pinouts, viva</li>
+        </ul>
+        <span class="go">Open the guide →</span>
+      </div>
+    </a>
+    <a class="card" href="guides/theory-bench.html">
+      <img src="docs/images/theory-bench.png" alt="Screenshot of the HW Lab Theory Bench" loading="lazy">
+      <div class="body">
+        <span class="tag">Quick · night before</span>
+        <h3>Theory Bench</h3>
+        <p>Short notes for fast revision.</p>
+        <ul>
+          <li>Key terms in plain words</li>
+          <li>"Try it on the trainer kit" steps</li>
+          <li>Viva flashcards and an abbreviation list</li>
+        </ul>
+        <span class="go">Start revising →</span>
+      </div>
+    </a>
+    <a class="card" href="simulators/ram-4x3.html">
+      <img src="docs/images/ram-4x3-vlab.png" alt="Screenshot of the 4×3 RAM simulator" loading="lazy">
+      <div class="body">
+        <span class="tag">Interactive · Exp 11</span>
+        <h3>4×3 RAM Simulator</h3>
+        <p>Read and write a real 4-word × 3-bit memory.</p>
+        <ul>
+          <li>Same layout as the IIT KGP COA vlab</li>
+          <li>Wire-by-wire checklist (60 wires)</li>
+          <li>A simpler model to learn the idea first</li>
+        </ul>
+        <span class="go">Play with it →</span>
+      </div>
+    </a>
+  </div>
+
+  <div class="part">Part B · How to use this</div>
+  <h2>A three-step plan</h2>
+  <div class="steps">
+    <div class="step"><h3>Before each lab</h3><p>Read that experiment in the <a href="guides/exam-guide.html">Exam Guide</a>. Play with its live circuit until the truth table makes sense, then wire it on the trainer kit.</p></div>
+    <div class="step"><h3>The week before the exam</h3><p>Go through the <a href="guides/theory-bench.html">Theory Bench</a>, one experiment a day. Practise writing the answer in the 7-heading format.</p></div>
+    <div class="step"><h3>The night before</h3><p>Run through the viva flashcards and the IC summary. Know pin 14 is V<sub>CC</sub> and pin 7 is GND by heart.</p></div>
+  </div>
+
+  <div class="part">Part C · Jump to an experiment</div>
+  <h2>All 12 experiments</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>No.</th><th>Experiment</th><th>Main ICs / parts</th><th>Open in</th></tr></thead>
+      <tbody>
+        <tr class="part-row"><td colspan="4">Combinational circuits · trainer kit</td></tr>
+        <tr><td class="no">00</td><td>Familiarisation of Digital ICs &amp; IC Trainer Kit</td><td class="ics">7400 7402 7404 7408 7410 7432 7486</td><td class="links"><a href="guides/exam-guide.html#exp00">Guide</a><a href="guides/theory-bench.html#exp00">Quick</a></td></tr>
+        <tr><td class="no">01</td><td>Boolean Functions using Basic &amp; Universal Gates</td><td class="ics">7400 7402 7404 7408 7432</td><td class="links"><a href="guides/exam-guide.html#exp01">Guide</a><a href="guides/theory-bench.html#exp01">Quick</a></td></tr>
+        <tr><td class="no">02</td><td>Half / Full Adder &amp; Half / Full Subtractor</td><td class="ics">7486 7400 7408 7432 7404</td><td class="links"><a href="guides/exam-guide.html#exp02">Guide</a><a href="guides/theory-bench.html#exp02">Quick</a></td></tr>
+        <tr><td class="no">03</td><td>Four-bit Adder / Subtractor</td><td class="ics">7483 ×2, 7486 ×2</td><td class="links"><a href="guides/exam-guide.html#exp03">Guide</a><a href="guides/theory-bench.html#exp03">Quick</a></td></tr>
+        <tr><td class="no">04</td><td>Combinational Circuits using MUX &amp; DEMUX</td><td class="ics">74151 74154</td><td class="links"><a href="guides/exam-guide.html#exp04">Guide</a><a href="guides/theory-bench.html#exp04">Quick</a></td></tr>
+        <tr class="part-row"><td colspan="4">Sequential circuits · trainer kit</td></tr>
+        <tr><td class="no">05</td><td>Flip-Flops (SR, JK, D, T, Master-Slave)</td><td class="ics">7400 7410 7404 · 7476 7473 7474</td><td class="links"><a href="guides/exam-guide.html#exp05">Guide</a><a href="guides/theory-bench.html#exp05">Quick</a></td></tr>
+        <tr><td class="no">06</td><td>Asynchronous (Ripple) 4-bit Up &amp; Down Counter</td><td class="ics">7476 ×2</td><td class="links"><a href="guides/exam-guide.html#exp06">Guide</a><a href="guides/theory-bench.html#exp06">Quick</a></td></tr>
+        <tr><td class="no">07</td><td>Synchronous Counter &amp; Sequence Generator</td><td class="ics">7476 ×2, 7408</td><td class="links"><a href="guides/exam-guide.html#exp07">Guide</a><a href="guides/theory-bench.html#exp07">Quick</a></td></tr>
+        <tr><td class="no">08</td><td>Shift Registers, Ring &amp; Johnson Counter</td><td class="ics">7474 ×2, 7476 ×2</td><td class="links"><a href="guides/exam-guide.html#exp08">Guide</a><a href="guides/theory-bench.html#exp08">Quick</a></td></tr>
+        <tr class="part-row"><td colspan="4">Computer organisation · virtual lab</td></tr>
+        <tr><td class="no">09</td><td>Design of Ripple Carry Adder <span class="pill">vlab</span></td><td class="ics">1 half adder, 3 full adders</td><td class="links"><a href="guides/exam-guide.html#exp09">Guide</a><a href="guides/theory-bench.html#exp09">Quick</a></td></tr>
+        <tr><td class="no">10</td><td>Design of a 4-bit ALU <span class="pill">vlab</span></td><td class="ics">four 1-bit ALUs</td><td class="links"><a href="guides/exam-guide.html#exp10">Guide</a><a href="guides/theory-bench.html#exp10">Quick</a></td></tr>
+        <tr><td class="no">11</td><td>Design of 4×3 RAM Memory <span class="pill">vlab</span></td><td class="ics">12 RAM cells, decoder, 9 OR</td><td class="links"><a href="guides/exam-guide.html#exp11">Guide</a><a href="guides/theory-bench.html#exp11">Quick</a><a href="simulators/ram-4x3.html">Sim</a></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note"><b>Heads up:</b> this is a student-made study aid, not the official lab manual. Circuits and pin numbers follow standard TTL datasheets, but your lab's manual and your faculty have the final word. Spot a mistake? <a href="https://github.com/YOUR-USERNAME/hw-lab-companion/issues/new/choose">Report it here</a>.</div>
+
+  <footer>
+    <span>Made by a senior, for juniors. Good luck in the lab.</span>
+    <span><a href="https://github.com/YOUR-USERNAME/hw-lab-companion">Source on GitHub</a> · MIT License</span>
+  </footer>
+</div>
+<script>
+(function(){
+  var root=document.documentElement, KEY='hwlab-theme';
+  try{var t=localStorage.getItem(KEY);if(t)root.dataset.theme=t;}catch(e){}
+  document.getElementById('theme').onclick=function(){
+    var dark=root.dataset.theme?root.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;
+    root.dataset.theme=dark?'light':'dark';
+    try{localStorage.setItem(KEY,root.dataset.theme);}catch(e){}
+  };
+})();
+</script>
+</body>
+</html>

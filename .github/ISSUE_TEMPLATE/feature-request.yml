@@ -1,0 +1,17 @@
+name: 💡 Idea / feature request
+description: A new simulator, a better explanation, or anything that would help.
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: Your idea
+      description: What would help, and for which experiment?
+    validations:
+      required: true
+  - type: checkboxes
+    id: help
+    attributes:
+      label: Can you help build it?
+      options:
+        - label: I'd like to work on this myself
