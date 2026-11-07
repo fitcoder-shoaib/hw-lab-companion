@@ -1,6 +1,6 @@
 # 📌 IC Quick Reference
 
-Every IC used in the trainer-kit experiments (Exp 00 to 08). For full pin diagrams, open the **[Exam Guide → Quick reference → All pin diagrams](../guides/exam-guide.html#c-pins)**.
+Every IC used in the trainer-kit experiments (Exp 00 to 08). For full pin diagrams, open the **[Exam Guide → Quick reference → All pin diagrams](https://fitcoder-shoaib.github.io/hw-lab-companion/guides/exam-guide.html#c-pins)**.
 
 > [!WARNING]
 > **Not every IC has V<sub>CC</sub> on the last pin.** The 7483, 7476 and 7473 are the usual traps. Check the table before you power up.

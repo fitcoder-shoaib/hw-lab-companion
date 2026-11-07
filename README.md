@@ -29,9 +29,9 @@ I made these tools while preparing for my own lab exam, and I'm leaving them her
 
 | Tool | Best for | What you get |
 |---|---|---|
-| 📘 **[Exam Guide](guides/exam-guide.html)** *(detailed)* | Before each lab, and deep study | Aim, components, theory, **live circuit diagrams** (tap an input, watch the signal), truth tables, K-maps, procedure, result and viva for every experiment. Plus digital basics, 13 IC pin diagrams, a searchable abbreviation list and all 60 viva questions in one place. |
-| ⚡ **[Theory Bench](guides/theory-bench.html)** *(quick)* | Last-week revision | Key terms in plain words, "try it on the trainer kit" steps, points to remember, viva flashcards and abbreviations. |
-| 🧠 **[4×3 RAM Simulator](simulators/ram-4x3.html)** | Experiment 11 | A clickable 4-word × 3-bit RAM. Two views: one that matches the **IIT KGP COA virtual lab** layout pin-for-pin (with a 60-wire checklist), and a simpler model to learn the idea first. |
+| 📘 **[Exam Guide](https://fitcoder-shoaib.github.io/hw-lab-companion/guides/exam-guide.html)** *(detailed)* | Before each lab, and deep study | Aim, components, theory, **live circuit diagrams** (tap an input, watch the signal), truth tables, K-maps, procedure, result and viva for every experiment. Plus digital basics, 13 IC pin diagrams, a searchable abbreviation list and all 60 viva questions in one place. |
+| ⚡ **[Theory Bench](https://fitcoder-shoaib.github.io/hw-lab-companion/guides/theory-bench.html)** *(quick)* | Last-week revision | Key terms in plain words, "try it on the trainer kit" steps, points to remember, viva flashcards and abbreviations. |
+| 🧠 **[4×3 RAM Simulator](https://fitcoder-shoaib.github.io/hw-lab-companion/simulators/ram-4x3.html)** | Experiment 11 | A clickable 4-word × 3-bit RAM. Two views: one that matches the **IIT KGP COA virtual lab** layout pin-for-pin (with a 60-wire checklist), and a simpler model to learn the idea first. |
 
 <table>
 <tr>
@@ -73,20 +73,20 @@ flowchart LR
 | No. | Experiment | Main ICs / parts | Jump in |
 |:-:|---|---|---|
 | | **Combinational circuits** · *trainer kit* | | |
-| 00 | Familiarisation of Digital ICs & IC Trainer Kit | 7400, 7402, 7404, 7408, 7410, 7432, 7486 | [Guide](guides/exam-guide.html#exp00) · [Quick](guides/theory-bench.html#exp00) |
-| 01 | Boolean Functions using Basic & Universal Gates | 7400, 7402, 7404, 7408, 7432 | [Guide](guides/exam-guide.html#exp01) · [Quick](guides/theory-bench.html#exp01) |
-| 02 | Half / Full Adder & Half / Full Subtractor | 7486, 7400, 7408, 7432, 7404 | [Guide](guides/exam-guide.html#exp02) · [Quick](guides/theory-bench.html#exp02) |
-| 03 | Four-bit Adder / Subtractor | 7483 ×2, 7486 ×2 | [Guide](guides/exam-guide.html#exp03) · [Quick](guides/theory-bench.html#exp03) |
-| 04 | Combinational Circuits using MUX & DEMUX | 74151, 74154 | [Guide](guides/exam-guide.html#exp04) · [Quick](guides/theory-bench.html#exp04) |
+| 00 | Familiarisation of Digital ICs & IC Trainer Kit | 7400, 7402, 7404, 7408, 7410, 7432, 7486 | [Guide](https://fitcoder-shoaib.github.io/hw-lab-companion/guides/exam-guide.html#exp00) · [Quick](https://fitcoder-shoaib.github.io/hw-lab-companion/guides/theory-bench.html#exp00) |
+| 01 | Boolean Functions using Basic & Universal Gates | 7400, 7402, 7404, 7408, 7432 | [Guide](https://fitcoder-shoaib.github.io/hw-lab-companion/guides/exam-guide.html#exp01) · [Quick](https://fitcoder-shoaib.github.io/hw-lab-companion/guides/theory-bench.html#exp01) |
+| 02 | Half / Full Adder & Half / Full Subtractor | 7486, 7400, 7408, 7432, 7404 | [Guide](https://fitcoder-shoaib.github.io/hw-lab-companion/guides/exam-guide.html#exp02) · [Quick](https://fitcoder-shoaib.github.io/hw-lab-companion/guides/theory-bench.html#exp02) |
+| 03 | Four-bit Adder / Subtractor | 7483 ×2, 7486 ×2 | [Guide](https://fitcoder-shoaib.github.io/hw-lab-companion/guides/exam-guide.html#exp03) · [Quick](https://fitcoder-shoaib.github.io/hw-lab-companion/guides/theory-bench.html#exp03) |
+| 04 | Combinational Circuits using MUX & DEMUX | 74151, 74154 | [Guide](https://fitcoder-shoaib.github.io/hw-lab-companion/guides/exam-guide.html#exp04) · [Quick](https://fitcoder-shoaib.github.io/hw-lab-companion/guides/theory-bench.html#exp04) |
 | | **Sequential circuits** · *trainer kit* | | |
-| 05 | Flip-Flops (SR, JK, D, T, Master-Slave) | 7400, 7410, 7404, 7476, 7473, 7474 | [Guide](guides/exam-guide.html#exp05) · [Quick](guides/theory-bench.html#exp05) |
-| 06 | Asynchronous (Ripple) 4-bit Up & Down Counter | 7476 ×2 | [Guide](guides/exam-guide.html#exp06) · [Quick](guides/theory-bench.html#exp06) |
-| 07 | Synchronous Counter & Sequence Generator | 7476 ×2, 7408 | [Guide](guides/exam-guide.html#exp07) · [Quick](guides/theory-bench.html#exp07) |
-| 08 | Shift Registers, Ring & Johnson Counter | 7474 ×2, 7476 ×2 | [Guide](guides/exam-guide.html#exp08) · [Quick](guides/theory-bench.html#exp08) |
+| 05 | Flip-Flops (SR, JK, D, T, Master-Slave) | 7400, 7410, 7404, 7476, 7473, 7474 | [Guide](https://fitcoder-shoaib.github.io/hw-lab-companion/guides/exam-guide.html#exp05) · [Quick](https://fitcoder-shoaib.github.io/hw-lab-companion/guides/theory-bench.html#exp05) |
+| 06 | Asynchronous (Ripple) 4-bit Up & Down Counter | 7476 ×2 | [Guide](https://fitcoder-shoaib.github.io/hw-lab-companion/guides/exam-guide.html#exp06) · [Quick](https://fitcoder-shoaib.github.io/hw-lab-companion/guides/theory-bench.html#exp06) |
+| 07 | Synchronous Counter & Sequence Generator | 7476 ×2, 7408 | [Guide](https://fitcoder-shoaib.github.io/hw-lab-companion/guides/exam-guide.html#exp07) · [Quick](https://fitcoder-shoaib.github.io/hw-lab-companion/guides/theory-bench.html#exp07) |
+| 08 | Shift Registers, Ring & Johnson Counter | 7474 ×2, 7476 ×2 | [Guide](https://fitcoder-shoaib.github.io/hw-lab-companion/guides/exam-guide.html#exp08) · [Quick](https://fitcoder-shoaib.github.io/hw-lab-companion/guides/theory-bench.html#exp08) |
 | | **Computer organisation** · *virtual lab* | | |
-| 09 | Design of Ripple Carry Adder | 1 half adder, 3 full adders | [Guide](guides/exam-guide.html#exp09) · [Quick](guides/theory-bench.html#exp09) |
-| 10 | Design of a 4-bit ALU (AND, OR, XOR, ADD) | four 1-bit ALU blocks | [Guide](guides/exam-guide.html#exp10) · [Quick](guides/theory-bench.html#exp10) |
-| 11 | Design of 4×3 RAM Memory | 12 RAM cells, decoder, 9 OR gates | [Guide](guides/exam-guide.html#exp11) · [Quick](guides/theory-bench.html#exp11) · [**Simulator**](simulators/ram-4x3.html) |
+| 09 | Design of Ripple Carry Adder | 1 half adder, 3 full adders | [Guide](https://fitcoder-shoaib.github.io/hw-lab-companion/guides/exam-guide.html#exp09) · [Quick](https://fitcoder-shoaib.github.io/hw-lab-companion/guides/theory-bench.html#exp09) |
+| 10 | Design of a 4-bit ALU (AND, OR, XOR, ADD) | four 1-bit ALU blocks | [Guide](https://fitcoder-shoaib.github.io/hw-lab-companion/guides/exam-guide.html#exp10) · [Quick](https://fitcoder-shoaib.github.io/hw-lab-companion/guides/theory-bench.html#exp10) |
+| 11 | Design of 4×3 RAM Memory | 12 RAM cells, decoder, 9 OR gates | [Guide](https://fitcoder-shoaib.github.io/hw-lab-companion/guides/exam-guide.html#exp11) · [Quick](https://fitcoder-shoaib.github.io/hw-lab-companion/guides/theory-bench.html#exp11) · [**Simulator**](https://fitcoder-shoaib.github.io/hw-lab-companion/simulators/ram-4x3.html) |
 
 📌 Need IC pinouts at a glance? See the **[IC quick reference](docs/ic-reference.md)**.
 
